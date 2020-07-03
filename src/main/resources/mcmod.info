@@ -1,0 +1,16 @@
+[
+{
+  "modid": "jigglyslimes",
+  "name": "Jiggly Slimes",
+  "description": "",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["WallaceTheWizard"],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]
