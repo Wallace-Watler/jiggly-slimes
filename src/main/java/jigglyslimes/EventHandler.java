@@ -28,11 +28,9 @@ public class EventHandler {
         }
     }
 
-    // TODO: Try removing this, might fix the odd look when slimes die
     @SubscribeEvent
     public static void onLivingDeath(LivingDeathEvent event) {
-        EntityLivingBase entity = event.getEntityLiving();
-        if(entity.getClass() == EntitySlime.class && entity.world.isRemote) JB_MAP.remove(entity);
+        // TODO: Some visual effect
     }
 
     @SubscribeEvent

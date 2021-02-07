@@ -3,7 +3,7 @@ package jigglyslimes;
 import jigglyslimes.math.Vec3D;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.monster.EntitySlime;
+import net.minecraft.entity.EntityLiving;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.TextFormatting;
@@ -45,7 +45,7 @@ public class SlimeJigglyBits {
      * Called whenever the corresponding entity is updated.
      * @param entity - the entity being updated
      */
-    public void update(EntitySlime entity) {
+    public void update(EntityLiving entity) {
         if(!entity.world.isRemote) return;
 
         // Calculates the acceleration and updates velocity of each jiggly bit due to compressive and tensile forces.

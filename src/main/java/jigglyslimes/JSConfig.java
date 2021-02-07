@@ -6,6 +6,6 @@ import net.minecraftforge.common.config.Config;
 public class JSConfig {
 
     @Config.Comment("Higher numbers produce smoother-looking slimes.")
-    @Config.RangeInt(min = 1, max = 1000)
-    public static int meshResolution = 8;
+    @Config.RangeInt(min = 0, max = 9)
+    public static int meshResolution = 4;
 }
