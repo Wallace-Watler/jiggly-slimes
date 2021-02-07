@@ -3,9 +3,10 @@ package jigglyslimes;
 import jigglyslimes.math.Vec3D;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.TextFormatting;
 
 import java.util.List;
@@ -45,26 +46,26 @@ public class SlimeJigglyBits {
      * Called whenever the corresponding entity is updated.
      * @param entity - the entity being updated
      */
-    public void update(EntityLiving entity) {
+    public void update(LivingEntity entity) {
         if(!entity.world.isRemote) return;
 
         // Calculates the acceleration and updates velocity of each jiggly bit due to compressive and tensile forces.
-        calculateInteraction(0, 4, entity.width);
-        calculateInteraction(1, 5, entity.width);
-        calculateInteraction(2, 6, entity.width);
-        calculateInteraction(3, 7, entity.width);
-        calculateInteraction(0, 2, entity.height);
-        calculateInteraction(1, 3, entity.height);
-        calculateInteraction(4, 6, entity.height);
-        calculateInteraction(5, 7, entity.height);
-        calculateInteraction(0, 1, entity.width);
-        calculateInteraction(2, 3, entity.width);
-        calculateInteraction(4, 5, entity.width);
-        calculateInteraction(6, 7, entity.width);
-        calculateInteraction(0, 7, Math.sqrt(2 * entity.width * entity.width + entity.height * entity.height));
-        calculateInteraction(1, 6, Math.sqrt(2 * entity.width * entity.width + entity.height * entity.height));
-        calculateInteraction(2, 5, Math.sqrt(2 * entity.width * entity.width + entity.height * entity.height));
-        calculateInteraction(3, 4, Math.sqrt(2 * entity.width * entity.width + entity.height * entity.height));
+        calculateInteraction(0, 4, entity.getWidth());
+        calculateInteraction(1, 5, entity.getWidth());
+        calculateInteraction(2, 6, entity.getWidth());
+        calculateInteraction(3, 7, entity.getWidth());
+        calculateInteraction(0, 2, entity.getHeight());
+        calculateInteraction(1, 3, entity.getHeight());
+        calculateInteraction(4, 6, entity.getHeight());
+        calculateInteraction(5, 7, entity.getHeight());
+        calculateInteraction(0, 1, entity.getWidth());
+        calculateInteraction(2, 3, entity.getWidth());
+        calculateInteraction(4, 5, entity.getWidth());
+        calculateInteraction(6, 7, entity.getWidth());
+        calculateInteraction(0, 7, Math.sqrt(2 * entity.getWidth() * entity.getWidth() + entity.getHeight() * entity.getHeight()));
+        calculateInteraction(1, 6, Math.sqrt(2 * entity.getWidth() * entity.getWidth() + entity.getHeight() * entity.getHeight()));
+        calculateInteraction(2, 5, Math.sqrt(2 * entity.getWidth() * entity.getWidth() + entity.getHeight() * entity.getHeight()));
+        calculateInteraction(3, 4, Math.sqrt(2 * entity.getWidth() * entity.getWidth() + entity.getHeight() * entity.getHeight()));
 
         // Apply friction due to compression, tension, and shearing.
         for(int i = 0; i < 8; i++) {
@@ -72,27 +73,27 @@ public class SlimeJigglyBits {
         }
 
         // Calculates the acceleration and updates velocity of each jiggly bit due to forces that restore rotation and relative position.
-        String s = TextFormatting.getTextWithoutFormattingCodes(entity.getName());
+        String s = TextFormatting.getTextWithoutFormattingCodes(entity.getName().getString());
         boolean renderUpsideDown = "Dinnerbone".equals(s) || "Grumm".equals(s);
         double cosTheta = Math.cos(Math.toRadians(entity.renderYawOffset));
         double sinTheta = Math.sin(Math.toRadians(entity.renderYawOffset));
-        double halfWidth = entity.width / 2;
+        double halfWidth = entity.getWidth() / 2;
         for(int i = 0; i < 8; i++) {
             double xx = (((i & 0x04) == 0x00) != renderUpsideDown) ? -halfWidth : halfWidth;
             double zz = (i & 0x01) == 0x00 ? -halfWidth : halfWidth;
             // temp is the position to target
             temp.x = xx * cosTheta - zz * sinTheta;
-            temp.y = (((i & 0x02) == 0x00) != renderUpsideDown) ? 0.0 : entity.height;
+            temp.y = (((i & 0x02) == 0x00) != renderUpsideDown) ? 0.0 : entity.getHeight();
             temp.z = zz * cosTheta + xx * sinTheta;
             // Ratio of surface area to volume represents metabolism; larger creatures tend to move slower.
-            double accelMagnitude = RIGIDITY * (2 * entity.width * entity.width + 4 * entity.width * entity.height) / (entity.width * entity.width * entity.height);
+            double accelMagnitude = RIGIDITY * (2 * entity.getWidth() * entity.getWidth() + 4 * entity.getWidth() * entity.getHeight()) / (entity.getWidth() * entity.getWidth() * entity.getHeight());
             vel[i].add(temp.subtract(pos[i]).scale(accelMagnitude * 0.05));
         }
 
         // Apply gravity, atmospheric buoyancy, and friction due to air and collisions with blocks and entities.
         translateToWorldCoords(entity);
         for(int i = 0; i < 8; i++) {
-            Vec3d position = new Vec3d(pos[i].x, pos[i].y, pos[i].z);
+            Vector3d position = new Vector3d(pos[i].x, pos[i].y, pos[i].z);
             Material materialAtPos = entity.world.getBlockState(new BlockPos(position)).getMaterial();
             if(materialAtPos.isSolid() || materialAtPos.isLiquid()) {
                 vel[i].scale(COLLISION_FRICTION);
@@ -113,13 +114,17 @@ public class SlimeJigglyBits {
                 jiggly bits at extreme velocities won't get stuck while those at small and medium velocities will behave
                 similarly to quadratic drag.
                  */
-                double Cv = vel[i].length() * airDensityRatio * JigglySlimes.AIR_FRICTION / Math.pow(entity.width * entity.width * entity.height, 1.0 / 3);
+                double Cv = vel[i].length() * airDensityRatio * JigglySlimes.AIR_FRICTION / Math.pow(entity.getWidth() * entity.getWidth() * entity.getHeight(), 1.0 / 3);
                 double velRatioModified = 1 - Cv * Math.exp(-Cv);
                 vel[i].scale(velRatioModified);
                 translateToWorldCoords(entity);
             }
 
-            List<Entity> collidedEntities = entity.world.getEntities(Entity.class, collided -> collided != null && collided != entity && collided.isEntityAlive() && collided.getRenderBoundingBox().contains(position));
+            List<Entity> collidedEntities = entity.world.getEntitiesInAABBexcluding(
+                    entity,
+                    AxisAlignedBB.withSizeAtOrigin(8.0, 8.0, 8.0).offset(position),
+                    collided -> collided != null && collided.isAlive() && collided.getRenderBoundingBox().contains(position)
+            );
             for(Entity collided : collidedEntities) {
                 translateToEntityCoords(collided);
                 vel[i].scale(COLLISION_FRICTION);
@@ -146,15 +151,15 @@ public class SlimeJigglyBits {
 
     private void translateToWorldCoords(Entity entity) {
         for(int i = 0; i < 8; i++) {
-            pos[i].add(entity.posX, entity.posY, entity.posZ);
-            vel[i].add((entity.posX - entity.prevPosX) / 0.05, (entity.posY - entity.prevPosY) / 0.05, (entity.posZ - entity.prevPosZ) / 0.05);
+            pos[i].add(entity.getPosX(), entity.getPosY(), entity.getPosZ());
+            vel[i].add((entity.getPosX() - entity.prevPosX) / 0.05, (entity.getPosY() - entity.prevPosY) / 0.05, (entity.getPosZ() - entity.prevPosZ) / 0.05);
         }
     }
 
     private void translateToEntityCoords(Entity entity) {
         for(int i = 0; i < 8; i++) {
-            pos[i].subtract(entity.posX, entity.posY, entity.posZ);
-            vel[i].subtract((entity.posX - entity.prevPosX) / 0.05, (entity.posY - entity.prevPosY) / 0.05, (entity.posZ - entity.prevPosZ) / 0.05);
+            pos[i].subtract(entity.getPosX(), entity.getPosY(), entity.getPosZ());
+            vel[i].subtract((entity.getPosX() - entity.prevPosX) / 0.05, (entity.getPosY() - entity.prevPosY) / 0.05, (entity.getPosZ() - entity.prevPosZ) / 0.05);
         }
     }
 }

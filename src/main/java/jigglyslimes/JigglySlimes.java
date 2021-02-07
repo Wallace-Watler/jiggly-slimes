@@ -1,15 +1,27 @@
 package jigglyslimes;
 
-import net.minecraft.entity.monster.EntitySlime;
+import net.minecraft.client.renderer.entity.EntityRenderer;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.monster.SlimeEntity;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.living.LivingEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.client.registry.IRenderFactory;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-@Mod(modid = JigglySlimes.MODID, useMetadata = true, clientSideOnly = true)
+import java.util.WeakHashMap;
+import java.util.stream.Collectors;
+
+@Mod(JigglySlimes.MODID)
 public class JigglySlimes {
 
     public static final String MODID = "jigglyslimes";
@@ -19,14 +31,44 @@ public class JigglySlimes {
 
     public static final Logger LOGGER = LogManager.getLogger();
 
-    @Mod.EventHandler
-    public static void preInit(FMLPreInitializationEvent event) {
-        RenderingRegistry.registerEntityRenderingHandler(EntitySlime.class, RenderSlime::new);
+    public JigglySlimes() {
+        MinecraftForge.EVENT_BUS.register(this);
     }
 
-    @Mod.EventHandler
-    public static void init(FMLInitializationEvent event) {}
+    @SubscribeEvent
+    public void setup(final FMLCommonSetupEvent event) {
 
-    @Mod.EventHandler
-    public static void postInit(FMLPostInitializationEvent event) {}
+    }
+
+    @SubscribeEvent
+    public void doClientStuff(final FMLClientSetupEvent event) {
+        //RenderingRegistry.<SlimeEntity>registerEntityRenderingHandler(EntityType.SLIME, manager -> new SlimeRenderer(manager, model, shadowSize));
+    }
+
+    @SubscribeEvent
+    public void processIMC(final InterModProcessEvent event) {
+        LOGGER.info("Got IMC {}", event.getIMCStream()
+                .map(m -> m.getMessageSupplier().get())
+                .collect(Collectors.toList()));
+    }
+
+    @Mod.EventBusSubscriber(value = Dist.CLIENT)
+    public static class EventHandler {
+        public static final WeakHashMap<SlimeEntity, SlimeJigglyBits> JB_MAP = new WeakHashMap<>();
+
+        @SubscribeEvent
+        public static void onLivingUpdate(LivingEvent.LivingUpdateEvent event) {
+            LivingEntity entity = event.getEntityLiving();
+            if(entity.getClass() == SlimeEntity.class && entity.world.isRemote) {
+                SlimeEntity entitySlime = (SlimeEntity) entity;
+                if(!JB_MAP.containsKey(entitySlime)) JB_MAP.put(entitySlime, new SlimeJigglyBits());
+                JB_MAP.get(entitySlime).update(entitySlime);
+            }
+        }
+
+        @SubscribeEvent
+        public static void onLivingDeath(LivingDeathEvent event) {
+            // TODO: Some visual effect
+        }
+    }
 }
