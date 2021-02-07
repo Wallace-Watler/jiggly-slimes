@@ -22,7 +22,7 @@ public class QuadMesh implements ModelComponent {
     private final float[][] u, v;
     private final ResourceLocation texture;
 
-    // Temporary vectors that are reused to prevent excessive object instantiation.
+    // Temporary vectors
     private static final Vec3D temp0 = new Vec3D();
     private static final Vec3D temp1 = new Vec3D();
     private static final Vec3D temp2 = new Vec3D();
@@ -31,14 +31,15 @@ public class QuadMesh implements ModelComponent {
     /**
      * Construct a {@code QuadMesh} using four sets of model positions and UV pairs. Model positions should be given
      * in model space. UV coordinates should be between 0 and 1, inclusive.
-     * @param resolution - the number of vertices per "edge"; higher numbers produce smoother meshes; should be >= 2
+     * @param resolution - the number of "quads per edge"; higher numbers produce smoother meshes; should be >= 1
      * @param texture - the location of the texture to apply
      */
     public QuadMesh(Vec3D modelPos0, float u0, float v0, Vec3D modelPos1, float u1, float v1, Vec3D modelPos2, float u2, float v2, Vec3D modelPos3, float u3, float v3, int resolution, ResourceLocation texture) {
-        if(resolution < 2) {
-            JigglySlimes.LOGGER.warn("Invalid QuadMesh resolution of '" + resolution + "' received, changing to 2.");
-            resolution = 2;
+        if(resolution < 1) {
+            JigglySlimes.LOGGER.warn("Invalid QuadMesh resolution of '" + resolution + "' received, changing to 1.");
+            resolution = 1;
         }
+        resolution++;
 
         this.resolution = resolution;
         modelPos = new Vec3D[resolution][resolution];
@@ -110,6 +111,8 @@ public class QuadMesh implements ModelComponent {
      *                        {@code DefaultVertexFormats.POSITION_TEX_NORMAL}
      */
     void addToRenderBuffer(BufferBuilder bufferBuilder) {
+        // TODO: Calculate lerps in here instead of in render()?
+
         for(int j = 0; j < resolution - 1; j++) {
             for(int i = 0; i < resolution - 1; i++) {
                 // Tri 1

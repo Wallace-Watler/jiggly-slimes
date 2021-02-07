@@ -2,15 +2,11 @@
 {
   "modid": "jigglyslimes",
   "name": "Jiggly Slimes",
-  "description": "",
+  "description": "A client-side mod that gives slimes a jiggly appearance.",
   "version": "${version}",
   "mcversion": "${mcversion}",
-  "url": "",
-  "updateUrl": "",
+  "updateJSON": "",
   "authorList": ["WallaceTheWizard"],
-  "credits": "",
-  "logoFile": "",
-  "screenshots": [],
-  "dependencies": []
+  "logoFile": ""
 }
 ]

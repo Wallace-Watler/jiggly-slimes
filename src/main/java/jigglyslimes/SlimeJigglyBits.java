@@ -6,9 +6,13 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.monster.EntitySlime;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.text.TextFormatting;
 
 import java.util.List;
 
+/**
+ * Eight point-masses that interact with each other and the environment to simulate the physics of a slime.
+ */
 public class SlimeJigglyBits {
 
     public static final double DENSITY = 1200.0; // In kg/m^3
@@ -21,9 +25,7 @@ public class SlimeJigglyBits {
     public final Vec3D[] pos = new Vec3D[8];
     public final Vec3D[] vel = new Vec3D[8];
 
-    public final EntitySlime entity;
-
-    // Temporary vectors that are reused to prevent excessive object instantiation.
+    // Temporary vectors
     private static final Vec3D temp = new Vec3D();
     private static final Vec3D[] velTimesDT = new Vec3D[8];
 
@@ -31,8 +33,7 @@ public class SlimeJigglyBits {
         for(int i = 0; i < 8; i++) velTimesDT[i] = new Vec3D();
     }
 
-    public SlimeJigglyBits(EntitySlime entity) {
-        this.entity = entity;
+    public SlimeJigglyBits() {
         for(int i = 0; i < 8; i++) {
             prevPos[i] = new Vec3D();
             pos[i] = new Vec3D();
@@ -40,7 +41,11 @@ public class SlimeJigglyBits {
         }
     }
 
-    public void update() {
+    /**
+     * Called whenever the corresponding entity is updated.
+     * @param entity - the entity being updated
+     */
+    public void update(EntitySlime entity) {
         if(!entity.world.isRemote) return;
 
         // Calculates the acceleration and updates velocity of each jiggly bit due to compressive and tensile forces.
@@ -67,14 +72,17 @@ public class SlimeJigglyBits {
         }
 
         // Calculates the acceleration and updates velocity of each jiggly bit due to forces that restore rotation and relative position.
+        String s = TextFormatting.getTextWithoutFormattingCodes(entity.getName());
+        boolean renderUpsideDown = "Dinnerbone".equals(s) || "Grumm".equals(s);
         double cosTheta = Math.cos(Math.toRadians(entity.renderYawOffset));
         double sinTheta = Math.sin(Math.toRadians(entity.renderYawOffset));
         double halfWidth = entity.width / 2;
         for(int i = 0; i < 8; i++) {
-            double xx = (i & 0x04) == 0x00 ? -halfWidth : halfWidth;
+            double xx = (((i & 0x04) == 0x00) != renderUpsideDown) ? -halfWidth : halfWidth;
             double zz = (i & 0x01) == 0x00 ? -halfWidth : halfWidth;
+            // temp is the position to target
             temp.x = xx * cosTheta - zz * sinTheta;
-            temp.y = (i & 0x02) == 0x00 ? 0.0 : entity.height;
+            temp.y = (((i & 0x02) == 0x00) != renderUpsideDown) ? 0.0 : entity.height;
             temp.z = zz * cosTheta + xx * sinTheta;
             // Ratio of surface area to volume represents metabolism; larger creatures tend to move slower.
             double accelMagnitude = RIGIDITY * (2 * entity.width * entity.width + 4 * entity.width * entity.height) / (entity.width * entity.width * entity.height);
@@ -98,12 +106,12 @@ public class SlimeJigglyBits {
                 coefficient of air, and the cross-sectional area presented. In this context, large velocities will
                 make that value negative, resulting in numerical instability. The expression e^(-Cv) can be used
                 instead as it is always positive and is tangent to 1 - Cv at v = 0, and it would probably work well
-                server-side if the entity velocity was affected as well. When client-side though, this also has a
-                problem in that the jiggly bits, being client-side only, can experience such high acceleration that
-                they get stuck and no longer move; e^(-Cv) approaches 0 as v -> infinity. Therefore, the expression
-                1 - Cve^(-Cv) is used here. It is also always positive and tangent to 1 - Cv at v = 0, but is
-                asymptotically equal to 1. This means that jiggly bits at extreme velocities won't get stuck while
-                those at small and medium velocities will behave similarly to quadratic drag.
+                server-side if the entity velocity were affected as well. When client-side though, this also has a
+                problem in that the jiggly bits can experience such high acceleration that they get stuck and no longer
+                move; e^(-Cv) approaches 0 as v -> infinity. Therefore, the expression 1 - Cve^(-Cv) is used here. It is
+                also always positive and tangent to 1 - Cv at v = 0, but is asymptotically equal to 1. This means that
+                jiggly bits at extreme velocities won't get stuck while those at small and medium velocities will behave
+                similarly to quadratic drag.
                  */
                 double Cv = vel[i].length() * airDensityRatio * JigglySlimes.AIR_FRICTION / Math.pow(entity.width * entity.width * entity.height, 1.0 / 3);
                 double velRatioModified = 1 - Cv * Math.exp(-Cv);

@@ -1,5 +1,9 @@
 package jigglyslimes.math;
 
+/**
+ * A representation of a 3D vector. Unlike Minecraft's {@code Vec3d}, these are intended to be modified and reused to
+ * reduce object initializations and ideally improve performance.
+ */
 public class Vec3D {
 
     public double x, y, z;

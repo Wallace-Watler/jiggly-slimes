@@ -13,7 +13,7 @@ import org.apache.logging.log4j.Logger;
 public class JigglySlimes {
 
     public static final String MODID = "jigglyslimes";
-    public static final double GRAVITY = -32; // In m/s^2
+    public static final double GRAVITY = -32.0; // In m/s^2
     public static final double AIR_FRICTION = 50.0;
     public static final double AIR_DENSITY = 1.2; // In kg/m^3
 
