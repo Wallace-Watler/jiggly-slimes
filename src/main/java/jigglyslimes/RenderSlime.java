@@ -10,6 +10,7 @@ import net.minecraft.client.renderer.entity.RenderLiving;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.monster.EntitySlime;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
@@ -40,10 +41,10 @@ public class RenderSlime extends RenderLiving<EntitySlime> {
     }
 
     public static void createModelComponents() {
-        INNER_BODY = new BoxMesh(new Vec3D(0.125, 0.125, 0.125), new Vec3D(0.875, 0.875, 0.875), 0, 16, 6, 6, 6, (JSConfig.meshResolution * 3 + 3) / 4, SLIME_TEXTURES, TEXTURE_WIDTH, TEXTURE_HEIGHT);
-        RIGHT_EYE = new BoxMesh(new Vec3D(0.09375, 0.5, 0.6875), new Vec3D(0.34375, 0.75, 0.9375), 32, 0, 2, 2, 2, (JSConfig.meshResolution + 3) / 4, SLIME_TEXTURES, TEXTURE_WIDTH, TEXTURE_HEIGHT);
-        LEFT_EYE = new BoxMesh(new Vec3D(0.65625, 0.5, 0.6875), new Vec3D(0.90625, 0.75, 0.9375), 32, 4, 2, 2, 2, (JSConfig.meshResolution + 3) / 4, SLIME_TEXTURES, TEXTURE_WIDTH, TEXTURE_HEIGHT);
-        MOUTH = new BoxMesh(new Vec3D(0.5, 0.25, 0.8125), new Vec3D(0.625, 0.375, 0.9375), 32, 8, 1, 1, 1, (JSConfig.meshResolution + 7) / 8, SLIME_TEXTURES, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+        INNER_BODY = new BoxMesh(new Vec3D(0.125, 0.125, 0.125), new Vec3D(0.875, 0.875, 0.875), 0, 16, 6, 6, 6, JSConfig.meshResolution, SLIME_TEXTURES, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+        RIGHT_EYE = new BoxMesh(new Vec3D(0.09375, 0.5, 0.6875), new Vec3D(0.34375, 0.75, 0.9375), 32, 0, 2, 2, 2, Math.max(JSConfig.meshResolution - 2, 0), SLIME_TEXTURES, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+        LEFT_EYE = new BoxMesh(new Vec3D(0.65625, 0.5, 0.6875), new Vec3D(0.90625, 0.75, 0.9375), 32, 4, 2, 2, 2, Math.max(JSConfig.meshResolution - 2, 0), SLIME_TEXTURES, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+        MOUTH = new BoxMesh(new Vec3D(0.5, 0.25, 0.8125), new Vec3D(0.625, 0.375, 0.9375), 32, 8, 1, 1, 1, Math.max(JSConfig.meshResolution - 3, 0), SLIME_TEXTURES, TEXTURE_WIDTH, TEXTURE_HEIGHT);
         OUTER_BODY = new BoxMesh(new Vec3D(0.0, 0.0, 0.0), new Vec3D(1.0, 1.0, 1.0), 0, 0, 8, 8, 8, JSConfig.meshResolution, SLIME_TEXTURES, TEXTURE_WIDTH, TEXTURE_HEIGHT);
     }
 
@@ -68,6 +69,9 @@ public class RenderSlime extends RenderLiving<EntitySlime> {
                 Vec3D.lerp(jigglyBits.prevPos[i], jigglyBits.pos[i], partialTicks, lerpedJigglyBits[i]);
             }
 
+            // resReduction = max(log2(distance) - 4, 0)
+            final int resReduction = Math.max((MathHelper.log2((int) (x * x + y * y + z * z)) >> 1) - 4, 0);
+
             GlStateManager.pushMatrix();
             GlStateManager.disableCull();
 
@@ -87,7 +91,7 @@ public class RenderSlime extends RenderLiving<EntitySlime> {
                         if(visible || flag2) {
                             if(!bindEntityTexture(entity)) return;
                             if(flag2) GlStateManager.enableBlendProfile(GlStateManager.Profile.TRANSPARENT_MODEL);
-                            renderOpaqueModelComponents(lerpedJigglyBits[0], lerpedJigglyBits[1], lerpedJigglyBits[2], lerpedJigglyBits[3], lerpedJigglyBits[4], lerpedJigglyBits[5], lerpedJigglyBits[6], lerpedJigglyBits[7]);
+                            renderOpaqueModelComponents(resReduction, lerpedJigglyBits[0], lerpedJigglyBits[1], lerpedJigglyBits[2], lerpedJigglyBits[3], lerpedJigglyBits[4], lerpedJigglyBits[5], lerpedJigglyBits[6], lerpedJigglyBits[7]);
                             if(flag2) GlStateManager.disableBlendProfile(GlStateManager.Profile.TRANSPARENT_MODEL);
                         }
                     }
@@ -98,7 +102,7 @@ public class RenderSlime extends RenderLiving<EntitySlime> {
                         GlStateManager.enableNormalize();
                         GlStateManager.enableBlend();
                         GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
-                        renderTranslucentModelComponents(lerpedJigglyBits[0], lerpedJigglyBits[1], lerpedJigglyBits[2], lerpedJigglyBits[3], lerpedJigglyBits[4], lerpedJigglyBits[5], lerpedJigglyBits[6], lerpedJigglyBits[7]);
+                        renderTranslucentModelComponents(resReduction, lerpedJigglyBits[0], lerpedJigglyBits[1], lerpedJigglyBits[2], lerpedJigglyBits[3], lerpedJigglyBits[4], lerpedJigglyBits[5], lerpedJigglyBits[6], lerpedJigglyBits[7]);
                         GlStateManager.disableBlend();
                         GlStateManager.disableNormalize();
                     }
@@ -115,7 +119,7 @@ public class RenderSlime extends RenderLiving<EntitySlime> {
                     if(visible || flag2) {
                         if(!bindEntityTexture(entity)) return;
                         if(flag2) GlStateManager.enableBlendProfile(GlStateManager.Profile.TRANSPARENT_MODEL);
-                        renderOpaqueModelComponents(lerpedJigglyBits[0], lerpedJigglyBits[1], lerpedJigglyBits[2], lerpedJigglyBits[3], lerpedJigglyBits[4], lerpedJigglyBits[5], lerpedJigglyBits[6], lerpedJigglyBits[7]);
+                        renderOpaqueModelComponents(resReduction, lerpedJigglyBits[0], lerpedJigglyBits[1], lerpedJigglyBits[2], lerpedJigglyBits[3], lerpedJigglyBits[4], lerpedJigglyBits[5], lerpedJigglyBits[6], lerpedJigglyBits[7]);
                         if(flag2) GlStateManager.disableBlendProfile(GlStateManager.Profile.TRANSPARENT_MODEL);
                     }
 
@@ -128,7 +132,7 @@ public class RenderSlime extends RenderLiving<EntitySlime> {
                         GlStateManager.enableNormalize();
                         GlStateManager.enableBlend();
                         GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
-                        renderTranslucentModelComponents(lerpedJigglyBits[0], lerpedJigglyBits[1], lerpedJigglyBits[2], lerpedJigglyBits[3], lerpedJigglyBits[4], lerpedJigglyBits[5], lerpedJigglyBits[6], lerpedJigglyBits[7]);
+                        renderTranslucentModelComponents(resReduction, lerpedJigglyBits[0], lerpedJigglyBits[1], lerpedJigglyBits[2], lerpedJigglyBits[3], lerpedJigglyBits[4], lerpedJigglyBits[5], lerpedJigglyBits[6], lerpedJigglyBits[7]);
                         GlStateManager.disableBlend();
                         GlStateManager.disableNormalize();
                     }
@@ -153,14 +157,14 @@ public class RenderSlime extends RenderLiving<EntitySlime> {
         if(!renderOutlines) renderLeash(entity, x, y, z, entityYaw, partialTicks);
     }
 
-    private void renderOpaqueModelComponents(Vec3D modelCorner0, Vec3D modelCorner1, Vec3D modelCorner2, Vec3D modelCorner3, Vec3D modelCorner4, Vec3D modelCorner5, Vec3D modelCorner6, Vec3D modelCorner7) {
-        INNER_BODY.render(modelCorner0, modelCorner1, modelCorner2, modelCorner3, modelCorner4, modelCorner5, modelCorner6, modelCorner7);
-        RIGHT_EYE.render(modelCorner0, modelCorner1, modelCorner2, modelCorner3, modelCorner4, modelCorner5, modelCorner6, modelCorner7);
-        LEFT_EYE.render(modelCorner0, modelCorner1, modelCorner2, modelCorner3, modelCorner4, modelCorner5, modelCorner6, modelCorner7);
-        MOUTH.render(modelCorner0, modelCorner1, modelCorner2, modelCorner3, modelCorner4, modelCorner5, modelCorner6, modelCorner7);
+    private void renderOpaqueModelComponents(int resReduction, Vec3D modelCorner0, Vec3D modelCorner1, Vec3D modelCorner2, Vec3D modelCorner3, Vec3D modelCorner4, Vec3D modelCorner5, Vec3D modelCorner6, Vec3D modelCorner7) {
+        INNER_BODY.render(resReduction, modelCorner0, modelCorner1, modelCorner2, modelCorner3, modelCorner4, modelCorner5, modelCorner6, modelCorner7);
+        RIGHT_EYE.render(resReduction, modelCorner0, modelCorner1, modelCorner2, modelCorner3, modelCorner4, modelCorner5, modelCorner6, modelCorner7);
+        LEFT_EYE.render(resReduction, modelCorner0, modelCorner1, modelCorner2, modelCorner3, modelCorner4, modelCorner5, modelCorner6, modelCorner7);
+        MOUTH.render(resReduction, modelCorner0, modelCorner1, modelCorner2, modelCorner3, modelCorner4, modelCorner5, modelCorner6, modelCorner7);
     }
 
-    private void renderTranslucentModelComponents(Vec3D modelCorner0, Vec3D modelCorner1, Vec3D modelCorner2, Vec3D modelCorner3, Vec3D modelCorner4, Vec3D modelCorner5, Vec3D modelCorner6, Vec3D modelCorner7) {
-        OUTER_BODY.render(modelCorner0, modelCorner1, modelCorner2, modelCorner3, modelCorner4, modelCorner5, modelCorner6, modelCorner7);
+    private void renderTranslucentModelComponents(int resReduction, Vec3D modelCorner0, Vec3D modelCorner1, Vec3D modelCorner2, Vec3D modelCorner3, Vec3D modelCorner4, Vec3D modelCorner5, Vec3D modelCorner6, Vec3D modelCorner7) {
+        OUTER_BODY.render(resReduction, modelCorner0, modelCorner1, modelCorner2, modelCorner3, modelCorner4, modelCorner5, modelCorner6, modelCorner7);
     }
 }
