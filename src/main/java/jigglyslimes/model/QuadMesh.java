@@ -1,20 +1,27 @@
 package jigglyslimes.model;
 
-import jigglyslimes.JigglySlimes;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import jigglyslimes.math.Vec3D;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL11;
+
+import javax.annotation.Nonnull;
 
 /**
  * A "quadrilateral" having UV texture mappings for each of its four vertices. Unlike a typical quadrilateral, the
  * vertices need not be coplanar; extra vertices are added in between using bilinear interpolation.
  */
 public class QuadMesh implements ModelComponent {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final int numVertices;
     /** The vertices of this mesh relative to the entity model. */
@@ -38,7 +45,7 @@ public class QuadMesh implements ModelComponent {
      */
     public QuadMesh(Vec3D modelPos0, float u0, float v0, Vec3D modelPos1, float u1, float v1, Vec3D modelPos2, float u2, float v2, Vec3D modelPos3, float u3, float v3, int maxResolution, ResourceLocation texture) {
         if(maxResolution < 0) {
-            JigglySlimes.LOGGER.warn("Invalid QuadMesh resolution of '" + maxResolution + "' received, changing to 0.");
+            LOGGER.warn("Invalid QuadMesh resolution of '" + maxResolution + "' received, changing to 0.");
             maxResolution = 0;
         }
 
@@ -75,13 +82,13 @@ public class QuadMesh implements ModelComponent {
     }
 
     @Override
-    public void render(int resReduction, Vec3D modelCorner0, Vec3D modelCorner1, Vec3D modelCorner2, Vec3D modelCorner3, Vec3D modelCorner4, Vec3D modelCorner5, Vec3D modelCorner6, Vec3D modelCorner7) {
+    public void render(int resReduction, Vec3D[] modelCorners) {
         Minecraft.getInstance().getTextureManager().bindTexture(texture);
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder bufferBuilder = tessellator.getBuffer();
         //bufferBuilder.begin(GL11.GL_TRIANGLES, DefaultVertexFormats.POSITION_TEX_NORMAL);
 
-        addToRenderBuffer(bufferBuilder, resReduction, modelCorner0, modelCorner1, modelCorner2, modelCorner3, modelCorner4, modelCorner5, modelCorner6, modelCorner7);
+        addToRenderBuffer(bufferBuilder, resReduction, modelCorners);
 
         //tessellator.draw();
     }
@@ -91,17 +98,17 @@ public class QuadMesh implements ModelComponent {
      * calculating the interpolated vertices using the eight corners of the entity's model, relative to the entity position.
      * @param bufferBuilder - a {@code BufferBuilder} set to draw in {@code GL11.GL_TRIANGLES} and {@code DefaultVertexFormats.POSITION_TEX_NORMAL}
      */
-    void addToRenderBuffer(BufferBuilder bufferBuilder, int resReduction, Vec3D modelCorner0, Vec3D modelCorner1, Vec3D modelCorner2, Vec3D modelCorner3, Vec3D modelCorner4, Vec3D modelCorner5, Vec3D modelCorner6, Vec3D modelCorner7) {
+    void addToRenderBuffer(BufferBuilder bufferBuilder, int resReduction, Vec3D[] modelCorners) {
         final int skip = Math.min(1 << resReduction, numVertices - 1);
 
         // Calculate the interpolated vertices using the eight corners of the entity's model, relative to the entity origin.
         for(int j = 0; j < numVertices; j += skip) {
             for(int i = 0; i < numVertices; i += skip) {
-                Vec3D.lerp(modelCorner0, modelCorner4, modelPos[i][j].x, temp0);
-                Vec3D.lerp(modelCorner2, modelCorner6, modelPos[i][j].x, temp1);
+                Vec3D.lerp(modelCorners[0], modelCorners[4], modelPos[i][j].x, temp0);
+                Vec3D.lerp(modelCorners[2], modelCorners[6], modelPos[i][j].x, temp1);
                 Vec3D.lerp(temp0, temp1, modelPos[i][j].y, temp2);
-                Vec3D.lerp(modelCorner1, modelCorner5, modelPos[i][j].x, temp0);
-                Vec3D.lerp(modelCorner3, modelCorner7, modelPos[i][j].x, temp1);
+                Vec3D.lerp(modelCorners[1], modelCorners[5], modelPos[i][j].x, temp0);
+                Vec3D.lerp(modelCorners[3], modelCorners[7], modelPos[i][j].x, temp1);
                 Vec3D.lerp(temp0, temp1, modelPos[i][j].y, temp3);
                 Vec3D.lerp(temp2, temp3, modelPos[i][j].z, lerpedModelPos[i][j]);
             }

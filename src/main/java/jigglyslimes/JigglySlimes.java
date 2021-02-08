@@ -1,20 +1,21 @@
 package jigglyslimes;
 
-import net.minecraft.client.renderer.entity.EntityRenderer;
+import net.minecraft.block.Block;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.monster.SlimeEntity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.client.registry.IRenderFactory;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -29,27 +30,15 @@ public class JigglySlimes {
     public static final double AIR_FRICTION = 50.0;
     public static final double AIR_DENSITY = 1.2; // In kg/m^3
 
-    public static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public JigglySlimes() {
-        MinecraftForge.EVENT_BUS.register(this);
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::doClientStuff);
     }
 
-    @SubscribeEvent
-    public void setup(final FMLCommonSetupEvent event) {
-
-    }
-
-    @SubscribeEvent
-    public void doClientStuff(final FMLClientSetupEvent event) {
-        //RenderingRegistry.<SlimeEntity>registerEntityRenderingHandler(EntityType.SLIME, manager -> new SlimeRenderer(manager, model, shadowSize));
-    }
-
-    @SubscribeEvent
-    public void processIMC(final InterModProcessEvent event) {
-        LOGGER.info("Got IMC {}", event.getIMCStream()
-                .map(m -> m.getMessageSupplier().get())
-                .collect(Collectors.toList()));
+    private void doClientStuff(final FMLClientSetupEvent event) {
+        RenderingRegistry.registerEntityRenderingHandler(EntityType.SLIME, SlimeRenderer::new);
+        LOGGER.debug("Registered renderer for EntityType.SLIME.");
     }
 
     @Mod.EventBusSubscriber(value = Dist.CLIENT)

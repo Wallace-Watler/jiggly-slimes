@@ -122,4 +122,9 @@ public class Vec3D {
         }
         return false;
     }
+
+    @Override
+    public String toString() {
+        return String.format("Vec3D{%f, %f, %f}", x, y, z);
+    }
 }

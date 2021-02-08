@@ -13,5 +13,5 @@ public interface ModelComponent {
      * Renders this component given the eight corners of the entity's model, relative to the entity origin. The corners
      * need not form a rectangular prism.
      */
-    void render(int resReduction, Vec3D modelCorner0, Vec3D modelCorner1, Vec3D modelCorner2, Vec3D modelCorner3, Vec3D modelCorner4, Vec3D modelCorner5, Vec3D modelCorner6, Vec3D modelCorner7);
+    void render(int resReduction, Vec3D[] modelCorners);
 }

@@ -1,12 +1,16 @@
 package jigglyslimes.model;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import jigglyslimes.math.Vec3D;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
+
+import javax.annotation.Nonnull;
 
 /**
  * A "rectangular prism" mesh to be rendered as part of a model. Each face is a {@code QuadMesh}. The model faces the
@@ -54,13 +58,13 @@ public class BoxMesh implements ModelComponent {
     }
 
     @Override
-    public void render(int resReduction, Vec3D modelCorner0, Vec3D modelCorner1, Vec3D modelCorner2, Vec3D modelCorner3, Vec3D modelCorner4, Vec3D modelCorner5, Vec3D modelCorner6, Vec3D modelCorner7) {
+    public void render(int resReduction, Vec3D[] modelCorners) {
         Minecraft.getInstance().getTextureManager().bindTexture(texture);
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder bufferBuilder = tessellator.getBuffer();
         //bufferBuilder.begin(GL11.GL_TRIANGLES, DefaultVertexFormats.POSITION_TEX_NORMAL);
 
-        addToRenderBuffer(bufferBuilder, resReduction, modelCorner0, modelCorner1, modelCorner2, modelCorner3, modelCorner4, modelCorner5, modelCorner6, modelCorner7);
+        addToRenderBuffer(bufferBuilder, resReduction, modelCorners);
 
         //tessellator.draw();
     }
@@ -70,12 +74,12 @@ public class BoxMesh implements ModelComponent {
      * @param bufferBuilder - a {@code BufferBuilder} set to draw in {@code GL11.GL_TRIANGLES} and
      *                        {@code DefaultVertexFormats.POSITION_TEX_NORMAL}
      */
-    void addToRenderBuffer(BufferBuilder bufferBuilder, int resReduction, Vec3D modelCorner0, Vec3D modelCorner1, Vec3D modelCorner2, Vec3D modelCorner3, Vec3D modelCorner4, Vec3D modelCorner5, Vec3D modelCorner6, Vec3D modelCorner7) {
-        leftFace.addToRenderBuffer(bufferBuilder, resReduction, modelCorner0, modelCorner1, modelCorner2, modelCorner3, modelCorner4, modelCorner5, modelCorner6, modelCorner7);
-        frontFace.addToRenderBuffer(bufferBuilder, resReduction, modelCorner0, modelCorner1, modelCorner2, modelCorner3, modelCorner4, modelCorner5, modelCorner6, modelCorner7);
-        rightFace.addToRenderBuffer(bufferBuilder, resReduction, modelCorner0, modelCorner1, modelCorner2, modelCorner3, modelCorner4, modelCorner5, modelCorner6, modelCorner7);
-        backFace.addToRenderBuffer(bufferBuilder, resReduction, modelCorner0, modelCorner1, modelCorner2, modelCorner3, modelCorner4, modelCorner5, modelCorner6, modelCorner7);
-        topFace.addToRenderBuffer(bufferBuilder, resReduction, modelCorner0, modelCorner1, modelCorner2, modelCorner3, modelCorner4, modelCorner5, modelCorner6, modelCorner7);
-        bottomFace.addToRenderBuffer(bufferBuilder, resReduction, modelCorner0, modelCorner1, modelCorner2, modelCorner3, modelCorner4, modelCorner5, modelCorner6, modelCorner7);
+    void addToRenderBuffer(BufferBuilder bufferBuilder, int resReduction, Vec3D[] modelCorners) {
+        leftFace.addToRenderBuffer(bufferBuilder, resReduction, modelCorners);
+        frontFace.addToRenderBuffer(bufferBuilder, resReduction, modelCorners);
+        rightFace.addToRenderBuffer(bufferBuilder, resReduction, modelCorners);
+        backFace.addToRenderBuffer(bufferBuilder, resReduction, modelCorners);
+        topFace.addToRenderBuffer(bufferBuilder, resReduction, modelCorners);
+        bottomFace.addToRenderBuffer(bufferBuilder, resReduction, modelCorners);
     }
 }
