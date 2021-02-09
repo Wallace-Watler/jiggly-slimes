@@ -19,7 +19,7 @@ description='''A client-side mod that gives slimes a jiggly appearance.''' #mand
     mandatory=true #mandatory
     versionRange="[35,)" #mandatory
     ordering="NONE"
-    side="BOTH"
+    side="CLIENT"
 
 [[dependencies.jigglyslimes]]
     modId="minecraft"
@@ -27,4 +27,4 @@ description='''A client-side mod that gives slimes a jiggly appearance.''' #mand
     # This version range declares a minimum of the current minecraft version up to but not including the next major version
     versionRange="[1.16.4,1.17)"
     ordering="NONE"
-    side="BOTH"
+    side="CLIENT"

@@ -8,11 +8,11 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.WorldVertexBufferUploader;
 import net.minecraft.client.renderer.culling.ClippingHelper;
 import net.minecraft.client.renderer.entity.EntityRendererManager;
 import net.minecraft.client.renderer.entity.LivingRenderer;
 import net.minecraft.client.renderer.entity.MobRenderer;
-import net.minecraft.client.renderer.entity.layers.SlimeGelLayer;
 import net.minecraft.client.renderer.entity.model.SlimeModel;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.Entity;
@@ -23,7 +23,6 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Matrix4f;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.math.vector.Vector3f;
-import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.LightType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -37,8 +36,9 @@ import javax.annotation.Nonnull;
 
 @OnlyIn(Dist.CLIENT)
 public class SlimeRenderer extends LivingRenderer<SlimeEntity, SlimeModel<SlimeEntity>> {
-    //private static final ResourceLocation SLIME_TEXTURES = new ResourceLocation("textures/entity/slime/slime.png");
-    private static final ResourceLocation SLIME_TEXTURES = new ResourceLocation(JigglySlimes.MODID, "textures/entity/slime/slime.png");
+    public static final BufferBuilder BUFFER = new BufferBuilder(256);
+
+    private static final ResourceLocation SLIME_TEXTURES = new ResourceLocation("textures/entity/slime/slime.png");
     private static final int TEXTURE_WIDTH = 64;
     private static final int TEXTURE_HEIGHT = 32;
     private static BoxMesh INNER_BODY;
@@ -56,7 +56,7 @@ public class SlimeRenderer extends LivingRenderer<SlimeEntity, SlimeModel<SlimeE
     }
 
     public static void createModelComponents() {
-        final int meshResolution = 0; // TODO: = 3
+        final int meshResolution = 3;
         INNER_BODY = new BoxMesh(new Vector3f(0.125F, 0.125F, 0.125F), new Vector3f(0.875F, 0.875F, 0.875F), 0, 16, 6, 6, 6, meshResolution, TEXTURE_WIDTH, TEXTURE_HEIGHT);
         RIGHT_EYE = new BoxMesh(new Vector3f(0.09375F, 0.5F, 0.6875F), new Vector3f(0.34375F, 0.75F, 0.9375F), 32, 0, 2, 2, 2, Math.max(meshResolution - 2, 0), TEXTURE_WIDTH, TEXTURE_HEIGHT);
         LEFT_EYE = new BoxMesh(new Vector3f(0.65625F, 0.5F, 0.6875F), new Vector3f(0.90625F, 0.75F, 0.9375F), 32, 4, 2, 2, 2, Math.max(meshResolution - 2, 0), TEXTURE_WIDTH, TEXTURE_HEIGHT);
@@ -66,7 +66,6 @@ public class SlimeRenderer extends LivingRenderer<SlimeEntity, SlimeModel<SlimeE
 
     public SlimeRenderer(EntityRendererManager renderManagerIn) {
         super(renderManagerIn, new SlimeModel<>(16), 0.25F);
-        this.addLayer(new SlimeGelLayer<>(this));
     }
 
     /**
@@ -111,35 +110,39 @@ public class SlimeRenderer extends LivingRenderer<SlimeEntity, SlimeModel<SlimeE
 
             // resReduction = max(log2(distance) - 4, 0)
             final int resReduction = Math.max((MathHelper.log2((int) (x * x + y * y + z * z)) >> 1) - 4, 0);
-
-            matrixStack.push();
-
-            this.entityModel.isSitting = entity.isPassenger() && (entity.getRidingEntity() != null && entity.getRidingEntity().shouldRiderSit());
-
-            if(entity.deathTime > 0) {
-                float f = ((float) entity.deathTime + partialTicks - 1.0F) / 20.0F * 1.6F;
-                f = MathHelper.sqrt(f);
-                if(f > 1.0F) {
-                    f = 1.0F;
-                }
-                matrixStack.rotate(Vector3f.ZP.rotationDegrees(f * this.getDeathMaxRotation(entity)));
-            }
-
             final Minecraft minecraft = Minecraft.getInstance();
             final boolean entityIsVisible = this.isVisible(entity);
-            final boolean flag1 = !entityIsVisible && !entity.isInvisibleToPlayer(minecraft.player);
-            final RenderType renderType = this.func_230496_a_(entity, entityIsVisible, flag1, minecraft.isEntityGlowing(entity));
-            if(renderType != null) {
-                final IVertexBuilder vertexBuilder = renderTypeBuffer.getBuffer(renderType);
-                int packedOverlay = getPackedOverlay(entity, this.getOverlayProgress(entity, partialTicks));
-                renderOpaqueModelComponents(matrixStack.getLast(), vertexBuilder, packedLightIn, packedOverlay, 1.0F, 1.0F, 1.0F, flag1 ? 0.15F : 1.0F, resReduction, lerpedJigglyBits);
+            final int packedOverlay = getPackedOverlay(entity, this.getOverlayProgress(entity, partialTicks));
+
+            RenderType renderType;
+            if(!entityIsVisible && !entity.isInvisibleToPlayer(minecraft.player)) {
+                // TODO
+                renderType = RenderType.getItemEntityTranslucentCull(getEntityTexture(entity));
+                IVertexBuilder vertexBuilder = renderTypeBuffer.getBuffer(renderType);
+                renderOpaqueModelComponents(matrixStack.getLast(), vertexBuilder, packedLightIn, packedOverlay, 0.15F, resReduction);
+            } else if(entityIsVisible) {
+                renderType = JSRenderType.getEntityCutoutNoCullTris(getEntityTexture(entity));
+                BUFFER.begin(GL11.GL_TRIANGLES, DefaultVertexFormats.ENTITY);
+                renderOpaqueModelComponents(matrixStack.getLast(), BUFFER, packedLightIn, packedOverlay, 1.0F, resReduction);
+                BUFFER.finishDrawing();
+                renderType.setupRenderState();
+                WorldVertexBufferUploader.draw(BUFFER);
+                renderType.clearRenderState();
+            } else if(minecraft.isEntityGlowing(entity)) {
+                // TODO
+                renderType = RenderType.getOutline(getEntityTexture(entity));
+                IVertexBuilder vertexBuilder = renderTypeBuffer.getBuffer(renderType);
+                renderOpaqueModelComponents(matrixStack.getLast(), vertexBuilder, packedLightIn, packedOverlay, 1.0F, resReduction);
             }
             if(!entity.isInvisible()) {
-                IVertexBuilder vertexBuilder = renderTypeBuffer.getBuffer(RenderType.getEntityTranslucent(getEntityTexture(entity)));
-                renderTranslucentModelComponents(matrixStack.getLast(), vertexBuilder, packedLightIn, LivingRenderer.getPackedOverlay(entity, 0.0F), 1.0F, 1.0F, 1.0F, 1.0F, resReduction, lerpedJigglyBits);
+                renderType = JSRenderType.getEntityTranslucentTris(getEntityTexture(entity));
+                BUFFER.begin(GL11.GL_TRIANGLES, DefaultVertexFormats.ENTITY);
+                renderTranslucentModelComponents(matrixStack.getLast(), BUFFER, packedLightIn, LivingRenderer.getPackedOverlay(entity, 0.0F), resReduction);
+                BUFFER.finishDrawing();
+                renderType.setupRenderState();
+                WorldVertexBufferUploader.draw(BUFFER);
+                renderType.clearRenderState();
             }
-
-            matrixStack.pop();
 
             RenderNameplateEvent renderNameplateEvent = new RenderNameplateEvent(entity, entity.getDisplayName(), this, matrixStack, renderTypeBuffer, packedLightIn, partialTicks);
             MinecraftForge.EVENT_BUS.post(renderNameplateEvent);
@@ -187,14 +190,14 @@ public class SlimeRenderer extends LivingRenderer<SlimeEntity, SlimeModel<SlimeE
         matrixStack.pop();
     }
 
-    private static void renderOpaqueModelComponents(MatrixStack.Entry lastMatrixEntry, IVertexBuilder vertexBuilder, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha, int resReduction, Vector3f[] modelCorners) {
-        //INNER_BODY.render(lastMatrixEntry, vertexBuilder, packedLightIn, packedOverlayIn, red, green, blue, alpha, resReduction, modelCorners);
-        //RIGHT_EYE.render(lastMatrixEntry, vertexBuilder, packedLightIn, packedOverlayIn, red, green, blue, alpha, resReduction, modelCorners);
-        //LEFT_EYE.render(lastMatrixEntry, vertexBuilder, packedLightIn, packedOverlayIn, red, green, blue, alpha, resReduction, modelCorners);
-        //MOUTH.render(lastMatrixEntry, vertexBuilder, packedLightIn, packedOverlayIn, red, green, blue, alpha, resReduction, modelCorners);
+    private static void renderOpaqueModelComponents(MatrixStack.Entry lastMatrixEntry, IVertexBuilder vertexBuilder, int packedLightIn, int packedOverlayIn, float alpha, int resReduction) {
+        INNER_BODY.render(lastMatrixEntry, vertexBuilder, packedLightIn, packedOverlayIn, 1.0F, 1.0F, 1.0F, alpha, resReduction, lerpedJigglyBits);
+        RIGHT_EYE.render(lastMatrixEntry, vertexBuilder, packedLightIn, packedOverlayIn, 1.0F, 1.0F, 1.0F, alpha, resReduction, lerpedJigglyBits);
+        LEFT_EYE.render(lastMatrixEntry, vertexBuilder, packedLightIn, packedOverlayIn, 1.0F, 1.0F, 1.0F, alpha, resReduction, lerpedJigglyBits);
+        MOUTH.render(lastMatrixEntry, vertexBuilder, packedLightIn, packedOverlayIn, 1.0F, 1.0F, 1.0F, alpha, resReduction, lerpedJigglyBits);
     }
 
-    private static void renderTranslucentModelComponents(MatrixStack.Entry lastMatrixEntry, IVertexBuilder vertexBuilder, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha, int resReduction, Vector3f[] modelCorners) {
-        OUTER_BODY.render(lastMatrixEntry, vertexBuilder, packedLightIn, packedOverlayIn, red, green, blue, alpha, resReduction, modelCorners);
+    private static void renderTranslucentModelComponents(MatrixStack.Entry lastMatrixEntry, IVertexBuilder vertexBuilder, int packedLightIn, int packedOverlayIn, int resReduction) {
+        OUTER_BODY.render(lastMatrixEntry, vertexBuilder, packedLightIn, packedOverlayIn, 1.0F, 1.0F, 1.0F, 1.0F, resReduction, lerpedJigglyBits);
     }
 }
