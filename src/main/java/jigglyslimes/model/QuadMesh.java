@@ -81,27 +81,8 @@ public class QuadMesh implements ModelComponent {
      */
     @Override
     public void render(MatrixStack.Entry lastMatrixEntry, IVertexBuilder vertexBuilder, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha, int resReduction, Vector3f[] modelCorners) {
-        // TODO: Figure this out
-        final Matrix4f matrix4f = lastMatrixEntry.getMatrix();
-        final Matrix3f matrix3f = lastMatrixEntry.getNormal();
-        /*
-        Vector3f vector3f = modelrenderer$texturedquad.normal.copy();
-        vector3f.transform(matrix3f);
-        float f = vector3f.getX();
-        float f1 = vector3f.getY();
-        float f2 = vector3f.getZ();
-
-        for(int i = 0; i < 4; ++i) {
-            ModelRenderer.PositionTextureVertex modelrenderer$positiontexturevertex = modelrenderer$texturedquad.vertexPositions[i];
-            float f3 = modelrenderer$positiontexturevertex.position.getX() / 16.0F;
-            float f4 = modelrenderer$positiontexturevertex.position.getY() / 16.0F;
-            float f5 = modelrenderer$positiontexturevertex.position.getZ() / 16.0F;
-            Vector4f vector4f = new Vector4f(f3, f4, f5, 1.0F);
-            vector4f.transform(matrix4f);
-            vertexBuilder.addVertex(vector4f.getX(), vector4f.getY(), vector4f.getZ(), red, green, blue, alpha, modelrenderer$positiontexturevertex.textureU, modelrenderer$positiontexturevertex.textureV, packedOverlayIn, packedLightIn, f, f1, f2);
-        }*/
-
-        ////////
+        final Matrix4f projMatrix = lastMatrixEntry.getMatrix();
+        final Matrix3f normMatrix = lastMatrixEntry.getNormal();
 
         final int skip = Math.min(1 << resReduction, numVertices - 1);
 
@@ -130,18 +111,18 @@ public class QuadMesh implements ModelComponent {
                 MathUtil.sub(lerpedModelPos2, lerpedModelPos1, temp1);
                 temp0.cross(temp1);
                 temp0.normalize();
-                temp0.set(0.0F, 1.0F, 0.0F); // TODO: Temp code
-                temp0.transform(matrix3f);
+                temp0.transform(normMatrix);
 
-                transform(lerpedModelPos0, matrix4f);
-                transform(lerpedModelPos1, matrix4f);
-                transform(lerpedModelPos2, matrix4f);
+                transform(lerpedModelPos0, projMatrix);
+                transform(lerpedModelPos1, projMatrix);
+                transform(lerpedModelPos2, projMatrix);
 
                 vertexBuilder.addVertex(lerpedModelPos0.getX(), lerpedModelPos0.getY(), lerpedModelPos0.getZ(), red, green, blue, alpha, u[i + skip][j], v[i + skip][j], packedOverlayIn, packedLightIn, temp0.getX(), temp0.getY(), temp0.getZ());
                 vertexBuilder.addVertex(lerpedModelPos1.getX(), lerpedModelPos1.getY(), lerpedModelPos1.getZ(), red, green, blue, alpha, u[i][j], v[i][j], packedOverlayIn, packedLightIn, temp0.getX(), temp0.getY(), temp0.getZ());
                 vertexBuilder.addVertex(lerpedModelPos2.getX(), lerpedModelPos2.getY(), lerpedModelPos2.getZ(), red, green, blue, alpha, u[i][j + skip], v[i][j + skip], packedOverlayIn, packedLightIn, temp0.getX(), temp0.getY(), temp0.getZ());
 
                 // Tri 2
+                lerpedModelPos0 = lerpedModelPos[i + skip][j].copy();
                 lerpedModelPos1 = lerpedModelPos[i][j + skip].copy();
                 lerpedModelPos2 = lerpedModelPos[i + skip][j + skip].copy();
 
@@ -149,11 +130,11 @@ public class QuadMesh implements ModelComponent {
                 MathUtil.sub(lerpedModelPos2, lerpedModelPos1, temp1);
                 temp0.cross(temp1);
                 temp0.normalize();
-                temp0.set(0.0F, 1.0F, 0.0F); // TODO: Temp code
-                temp0.transform(matrix3f);
+                temp0.transform(normMatrix);
 
-                transform(lerpedModelPos1, matrix4f);
-                transform(lerpedModelPos2, matrix4f);
+                transform(lerpedModelPos0, projMatrix);
+                transform(lerpedModelPos1, projMatrix);
+                transform(lerpedModelPos2, projMatrix);
 
                 vertexBuilder.addVertex(lerpedModelPos0.getX(), lerpedModelPos0.getY(), lerpedModelPos0.getZ(), red, green, blue, alpha, u[i + skip][j], v[i + skip][j], packedOverlayIn, packedLightIn, temp0.getX(), temp0.getY(), temp0.getZ());
                 vertexBuilder.addVertex(lerpedModelPos1.getX(), lerpedModelPos1.getY(), lerpedModelPos1.getZ(), red, green, blue, alpha, u[i][j + skip], v[i][j + skip], packedOverlayIn, packedLightIn, temp0.getX(), temp0.getY(), temp0.getZ());

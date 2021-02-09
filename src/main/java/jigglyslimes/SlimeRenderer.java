@@ -104,13 +104,15 @@ public class SlimeRenderer extends LivingRenderer<SlimeEntity, SlimeModel<SlimeE
                 MathUtil.lerp(jigglyBits.prevPos[i], jigglyBits.pos[i], partialTicks, lerpedJigglyBits[i]);
             }
 
-            final double x = entity.getPosX();
-            final double y = entity.getPosY();
-            final double z = entity.getPosZ();
-
-            // resReduction = max(log2(distance) - 4, 0)
-            final int resReduction = Math.max((MathHelper.log2((int) (x * x + y * y + z * z)) >> 1) - 4, 0);
             final Minecraft minecraft = Minecraft.getInstance();
+            final int resReduction;
+            if(minecraft.player == null) {
+                resReduction = 0;
+            } else {
+                Vector3d entityPos = entity.getPositionVec().subtract(minecraft.player.getPositionVec());
+                // resReduction = max(log2(distance) - 4, 0)
+                resReduction = Math.max((MathHelper.log2((int) entityPos.lengthSquared()) >> 1) - 4, 0);
+            }
             final boolean entityIsVisible = this.isVisible(entity);
             final int packedOverlay = getPackedOverlay(entity, this.getOverlayProgress(entity, partialTicks));
 
