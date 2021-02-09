@@ -77,6 +77,6 @@ processResources {
 }
 
 // Required if running from within IntelliJ to allow resources to be read, otherwise leave it out
-sourceSets {
-    main { output.resourcesDir = output.classesDir }
-}
+//sourceSets {
+//    main { output.resourcesDir = output.classesDir }
+//}
