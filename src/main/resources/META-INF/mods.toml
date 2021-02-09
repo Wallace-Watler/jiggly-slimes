@@ -1,6 +1,6 @@
 modLoader="javafml" #mandatory
 loaderVersion="[35,)" #mandatory
-license="All rights reserved" #mandatory
+license="MIT" #mandatory
 #issueTrackerURL="" #optional
 
 [[mods]] #mandatory
