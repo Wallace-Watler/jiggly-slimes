@@ -13,7 +13,6 @@ public class JigglySlimes {
 
     public static final String MODID = "jigglyslimes";
     public static final float GRAVITY = -32.0F; // In m/s^2
-    public static final float AIR_FRICTION = 50.0F;
     public static final float AIR_DENSITY = 1.2F; // In kg/m^3
 
     private static final Logger LOGGER = LogManager.getLogger();
