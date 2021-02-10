@@ -1,12 +1,12 @@
 package jigglyslimes.model;
 
-import jigglyslimes.math.Vec3D;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.util.vector.Vector3f;
 
 /**
  * A "rectangular prism" mesh to be rendered as part of a model. Each face is a {@code QuadMesh}. The model faces the
@@ -35,16 +35,16 @@ public class BoxMesh implements ModelComponent {
      * @param texWidth - width of the texture file in pixels
      * @param texHeight - height of the texture file in pixels
      */
-    public BoxMesh(Vec3D modelPosLow, Vec3D modelPosHigh, int uOff, int vOff, int dxTex, int dyTex, int dzTex, int maxResolution, ResourceLocation texture, int texWidth, int texHeight) {
+    public BoxMesh(Vector3f modelPosLow, Vector3f modelPosHigh, int uOff, int vOff, int dxTex, int dyTex, int dzTex, int maxResolution, ResourceLocation texture, int texWidth, int texHeight) {
         this.texture = texture;
-        Vec3D modelPos0 = new Vec3D(modelPosLow.x, modelPosLow.y, modelPosLow.z);
-        Vec3D modelPos1 = new Vec3D(modelPosLow.x, modelPosLow.y, modelPosHigh.z);
-        Vec3D modelPos2 = new Vec3D(modelPosLow.x, modelPosHigh.y, modelPosLow.z);
-        Vec3D modelPos3 = new Vec3D(modelPosLow.x, modelPosHigh.y, modelPosHigh.z);
-        Vec3D modelPos4 = new Vec3D(modelPosHigh.x, modelPosLow.y, modelPosLow.z);
-        Vec3D modelPos5 = new Vec3D(modelPosHigh.x, modelPosLow.y, modelPosHigh.z);
-        Vec3D modelPos6 = new Vec3D(modelPosHigh.x, modelPosHigh.y, modelPosLow.z);
-        Vec3D modelPos7 = new Vec3D(modelPosHigh.x, modelPosHigh.y, modelPosHigh.z);
+        Vector3f modelPos0 = new Vector3f(modelPosLow.x, modelPosLow.y, modelPosLow.z);
+        Vector3f modelPos1 = new Vector3f(modelPosLow.x, modelPosLow.y, modelPosHigh.z);
+        Vector3f modelPos2 = new Vector3f(modelPosLow.x, modelPosHigh.y, modelPosLow.z);
+        Vector3f modelPos3 = new Vector3f(modelPosLow.x, modelPosHigh.y, modelPosHigh.z);
+        Vector3f modelPos4 = new Vector3f(modelPosHigh.x, modelPosLow.y, modelPosLow.z);
+        Vector3f modelPos5 = new Vector3f(modelPosHigh.x, modelPosLow.y, modelPosHigh.z);
+        Vector3f modelPos6 = new Vector3f(modelPosHigh.x, modelPosHigh.y, modelPosLow.z);
+        Vector3f modelPos7 = new Vector3f(modelPosHigh.x, modelPosHigh.y, modelPosHigh.z);
         leftFace = new QuadMesh(modelPos0, uOff, vOff + dxTex + dyTex, modelPos2, uOff, vOff + dxTex, modelPos3, uOff + dxTex, vOff + dxTex, modelPos1, uOff + dxTex, vOff + dxTex + dyTex, maxResolution, texture, texWidth, texHeight);
         frontFace = new QuadMesh(modelPos1, uOff + dxTex, vOff + dxTex + dyTex, modelPos3, uOff + dxTex, vOff + dxTex, modelPos7, uOff + dxTex + dzTex, vOff + dxTex, modelPos5, uOff + dxTex + dzTex, vOff + dxTex + dyTex, maxResolution, texture, texWidth, texHeight);
         rightFace = new QuadMesh(modelPos4, uOff + 2 * dxTex + dzTex, vOff + dxTex + dyTex, modelPos5, uOff + dxTex + dzTex, vOff + dxTex + dyTex, modelPos7, uOff + dxTex + dzTex, vOff + dxTex, modelPos6, uOff + 2 * dxTex + dzTex, vOff + dxTex, maxResolution, texture, texWidth, texHeight);
@@ -54,13 +54,13 @@ public class BoxMesh implements ModelComponent {
     }
 
     @Override
-    public void render(int resReduction, Vec3D modelCorner0, Vec3D modelCorner1, Vec3D modelCorner2, Vec3D modelCorner3, Vec3D modelCorner4, Vec3D modelCorner5, Vec3D modelCorner6, Vec3D modelCorner7) {
+    public void render(int resReduction, Vector3f[] modelCorners) {
         Minecraft.getMinecraft().getTextureManager().bindTexture(texture);
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder bufferBuilder = tessellator.getBuffer();
         bufferBuilder.begin(GL11.GL_TRIANGLES, DefaultVertexFormats.POSITION_TEX_NORMAL);
 
-        addToRenderBuffer(bufferBuilder, resReduction, modelCorner0, modelCorner1, modelCorner2, modelCorner3, modelCorner4, modelCorner5, modelCorner6, modelCorner7);
+        addToRenderBuffer(bufferBuilder, resReduction, modelCorners);
 
         tessellator.draw();
     }
@@ -70,12 +70,12 @@ public class BoxMesh implements ModelComponent {
      * @param bufferBuilder - a {@code BufferBuilder} set to draw in {@code GL11.GL_TRIANGLES} and
      *                        {@code DefaultVertexFormats.POSITION_TEX_NORMAL}
      */
-    void addToRenderBuffer(BufferBuilder bufferBuilder, int resReduction, Vec3D modelCorner0, Vec3D modelCorner1, Vec3D modelCorner2, Vec3D modelCorner3, Vec3D modelCorner4, Vec3D modelCorner5, Vec3D modelCorner6, Vec3D modelCorner7) {
-        leftFace.addToRenderBuffer(bufferBuilder, resReduction, modelCorner0, modelCorner1, modelCorner2, modelCorner3, modelCorner4, modelCorner5, modelCorner6, modelCorner7);
-        frontFace.addToRenderBuffer(bufferBuilder, resReduction, modelCorner0, modelCorner1, modelCorner2, modelCorner3, modelCorner4, modelCorner5, modelCorner6, modelCorner7);
-        rightFace.addToRenderBuffer(bufferBuilder, resReduction, modelCorner0, modelCorner1, modelCorner2, modelCorner3, modelCorner4, modelCorner5, modelCorner6, modelCorner7);
-        backFace.addToRenderBuffer(bufferBuilder, resReduction, modelCorner0, modelCorner1, modelCorner2, modelCorner3, modelCorner4, modelCorner5, modelCorner6, modelCorner7);
-        topFace.addToRenderBuffer(bufferBuilder, resReduction, modelCorner0, modelCorner1, modelCorner2, modelCorner3, modelCorner4, modelCorner5, modelCorner6, modelCorner7);
-        bottomFace.addToRenderBuffer(bufferBuilder, resReduction, modelCorner0, modelCorner1, modelCorner2, modelCorner3, modelCorner4, modelCorner5, modelCorner6, modelCorner7);
+    void addToRenderBuffer(BufferBuilder bufferBuilder, int resReduction, Vector3f[] modelCorners) {
+        leftFace.addToRenderBuffer(bufferBuilder, resReduction, modelCorners);
+        frontFace.addToRenderBuffer(bufferBuilder, resReduction, modelCorners);
+        rightFace.addToRenderBuffer(bufferBuilder, resReduction, modelCorners);
+        backFace.addToRenderBuffer(bufferBuilder, resReduction, modelCorners);
+        topFace.addToRenderBuffer(bufferBuilder, resReduction, modelCorners);
+        bottomFace.addToRenderBuffer(bufferBuilder, resReduction, modelCorners);
     }
 }
