@@ -18,7 +18,7 @@ public class SlimeJigglyBits {
 
     public static final float DENSITY = 1200.0F; // In kg/m^3
     public static final float RIGIDITY = 30.0F;
-    public static final float INTERNAL_FRICTION = 0.95F;
+    public static final float INTERNAL_FRICTION = 0.055F;
     public static final float COLLISION_FRICTION = 0.5F;
 
     // Coordinates are relative to the entity origin (non-rotated).
@@ -44,27 +44,44 @@ public class SlimeJigglyBits {
     public void update(EntityLiving entity) {
         if(!entity.world.isRemote) return;
 
-        // Calculates the acceleration and updates velocity of each jiggly bit due to compressive and tensile forces.
-        calculateInteraction(0, 4, entity.width);
-        calculateInteraction(1, 5, entity.width);
-        calculateInteraction(2, 6, entity.width);
-        calculateInteraction(3, 7, entity.width);
-        calculateInteraction(0, 2, entity.height);
-        calculateInteraction(1, 3, entity.height);
-        calculateInteraction(4, 6, entity.height);
-        calculateInteraction(5, 7, entity.height);
-        calculateInteraction(0, 1, entity.width);
-        calculateInteraction(2, 3, entity.width);
-        calculateInteraction(4, 5, entity.width);
-        calculateInteraction(6, 7, entity.width);
-        calculateInteraction(0, 7, MathHelper.sqrt(2 * entity.width * entity.width + entity.height * entity.height));
-        calculateInteraction(1, 6, MathHelper.sqrt(2 * entity.width * entity.width + entity.height * entity.height));
-        calculateInteraction(2, 5, MathHelper.sqrt(2 * entity.width * entity.width + entity.height * entity.height));
-        calculateInteraction(3, 4, MathHelper.sqrt(2 * entity.width * entity.width + entity.height * entity.height));
+        final float w = entity.width;
+        final float h = entity.height;
+        final float diagonal = MathHelper.sqrt(w * w + w * w + h * h);
+        final float volume = w * w * h;
 
-        // Apply friction due to compression, tension, and shearing.
+        // Calculates the acceleration and updates velocity of each jiggly bit due to compressive and tensile forces.
+        calculateInteraction(0, 4, w);
+        calculateInteraction(1, 5, w);
+        calculateInteraction(2, 6, w);
+        calculateInteraction(3, 7, w);
+        calculateInteraction(0, 2, h);
+        calculateInteraction(1, 3, h);
+        calculateInteraction(4, 6, h);
+        calculateInteraction(5, 7, h);
+        calculateInteraction(0, 1, w);
+        calculateInteraction(2, 3, w);
+        calculateInteraction(4, 5, w);
+        calculateInteraction(6, 7, w);
+        calculateInteraction(0, 7, diagonal);
+        calculateInteraction(1, 6, diagonal);
+        calculateInteraction(2, 5, diagonal);
+        calculateInteraction(3, 4, diagonal);
+
+        /*
+        Apply friction due to internal forces such as compression, tension, and shearing.
+
+        This is done by approximating quadratic drag between the particles of the material. True quadratic drag can be
+        achieved by multiplying the velocity (v) by 1 - Cv, where C represents various factors. When numerically
+        integrating though, large velocities will make that value negative, resulting in numerical instability. Here the
+        expression e^(-Cv) is used instead as it is always positive and is tangent to 1 - Cv at v = 0.
+
+        Quadratic drag is used here instead of linear drag because it doesn't affect slow velocities as much as higher
+        ones. This allows the jiggly bits to continuously move around a bit while also keeping them from flying out of
+        control whenever the entity moves suddenly.
+         */
+        final float C = INTERNAL_FRICTION / (float) Math.pow(volume, 1.0 / 3);
         for(int i = 0; i < 8; i++) {
-            vel[i].scale(INTERNAL_FRICTION);
+            vel[i].scale((float) Math.exp(-C * vel[i].length()));
         }
 
         // Calculates the acceleration and updates velocity of each jiggly bit due to forces that restore rotation and relative position.
@@ -76,6 +93,8 @@ public class SlimeJigglyBits {
         float cosTheta = (float) Math.cos(Math.toRadians(entity.renderYawOffset));
         float sinTheta = (float) Math.sin(Math.toRadians(entity.renderYawOffset));
         float halfWidth = entity.width / 2;
+        // Ratio of surface area to volume represents metabolism; larger creatures tend to move slower.
+        final float accelMagnitude = RIGIDITY * (2 * w * w + 4 * w * h) / volume;
         for(int i = 0; i < 8; i++) {
             float xx = (((i & 0x04) == 0x00) != renderUpsideDown) ? -halfWidth : halfWidth;
             float zz = (i & 0x01) == 0x00 ? -halfWidth : halfWidth;
@@ -83,14 +102,11 @@ public class SlimeJigglyBits {
             temp.x = xx * cosTheta - zz * sinTheta;
             temp.y = (((i & 0x02) == 0x00) != renderUpsideDown) ? 0.0F : entity.height;
             temp.z = zz * cosTheta + xx * sinTheta;
-            // Ratio of surface area to volume represents metabolism; larger creatures tend to move slower.
-            float accelMagnitude = RIGIDITY * (2 * entity.width * entity.width + 4 * entity.width * entity.height) / (entity.width * entity.width * entity.height);
-            //vel[i].add(temp.subtract(pos[i]).scale(accelMagnitude * 0.05));
             Vector3f.sub(temp, pos[i], temp).scale(accelMagnitude * 0.05F);
             Vector3f.add(vel[i], temp, vel[i]);
         }
 
-        // Apply gravity, atmospheric buoyancy, and friction due to air and collisions with blocks and entities.
+        // Apply gravity, atmospheric buoyancy, and friction due to collisions with blocks and entities.
         translateToWorldCoords(entity);
         for(int i = 0; i < 8; i++) {
             Vec3d position = new Vec3d(pos[i].x, pos[i].y, pos[i].z);
@@ -98,26 +114,8 @@ public class SlimeJigglyBits {
             if(materialAtPos.isSolid() || materialAtPos.isLiquid()) {
                 vel[i].scale(COLLISION_FRICTION);
             } else {
-                translateToEntityCoords(entity); // Air resistance is relative to the entity to prevent bits lagging behind too much.
                 float airDensityRatio = JigglySlimes.AIR_DENSITY / DENSITY;
                 if(!entity.hasNoGravity()) vel[i].y += (1.0F - airDensityRatio) * JigglySlimes.GRAVITY * 0.05F;
-                /*
-                Approximate quadratic drag in air. True quadratic drag can be achieved by multiplying the
-                velocity (v) by 1 - Cv, where C represents numerous factors such as the air density, the drag
-                coefficient of air, and the cross-sectional area presented. In this context, large velocities will
-                make that value negative, resulting in numerical instability. The expression e^(-Cv) can be used
-                instead as it is always positive and is tangent to 1 - Cv at v = 0, and it would probably work well
-                server-side if the entity velocity were affected as well. When client-side though, this also has a
-                problem in that the jiggly bits can experience such high acceleration that they get stuck and no longer
-                move; e^(-Cv) approaches 0 as v -> infinity. Therefore, the expression 1 - Cve^(-Cv) is used here. It is
-                also always positive and tangent to 1 - Cv at v = 0, but is asymptotically equal to 1. This means that
-                jiggly bits at extreme velocities won't get stuck while those at small and medium velocities will behave
-                similarly to quadratic drag.
-                 */
-                double Cv = vel[i].length() * airDensityRatio * JigglySlimes.AIR_FRICTION / Math.pow(entity.width * entity.width * entity.height, 1.0 / 3);
-                double velRatioModified = 1 - Cv * Math.exp(-Cv);
-                vel[i].scale((float) velRatioModified);
-                translateToWorldCoords(entity);
             }
 
             List<Entity> collidedEntities = entity.world.getEntities(Entity.class, collided -> collided != null && collided != entity && collided.isEntityAlive() && collided.getRenderBoundingBox().contains(position));
@@ -131,9 +129,7 @@ public class SlimeJigglyBits {
 
         // Update jiggly bit positions.
         for(int i = 0; i < 8; i++) {
-            //pos[i].copy(prevPos[i]);
             prevPos[i].set(pos[i]);
-            //pos[i].add(vel[i].scale(0.05, velTimesDT[i]));
             temp.set(vel[i]).scale(0.05F);
             Vector3f.add(pos[i], temp, pos[i]);
         }
