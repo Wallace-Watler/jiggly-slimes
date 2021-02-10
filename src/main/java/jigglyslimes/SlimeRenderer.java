@@ -56,12 +56,11 @@ public class SlimeRenderer extends LivingRenderer<SlimeEntity, SlimeModel<SlimeE
     }
 
     public static void createModelComponents() {
-        final int meshResolution = 3;
-        INNER_BODY = new BoxMesh(new Vector3f(0.125F, 0.125F, 0.125F), new Vector3f(0.875F, 0.875F, 0.875F), 0, 16, 6, 6, 6, meshResolution, TEXTURE_WIDTH, TEXTURE_HEIGHT);
-        RIGHT_EYE = new BoxMesh(new Vector3f(0.09375F, 0.5F, 0.6875F), new Vector3f(0.34375F, 0.75F, 0.9375F), 32, 0, 2, 2, 2, Math.max(meshResolution - 2, 0), TEXTURE_WIDTH, TEXTURE_HEIGHT);
-        LEFT_EYE = new BoxMesh(new Vector3f(0.65625F, 0.5F, 0.6875F), new Vector3f(0.90625F, 0.75F, 0.9375F), 32, 4, 2, 2, 2, Math.max(meshResolution - 2, 0), TEXTURE_WIDTH, TEXTURE_HEIGHT);
-        MOUTH = new BoxMesh(new Vector3f(0.5F, 0.25F, 0.8125F), new Vector3f(0.625F, 0.375F, 0.9375F), 32, 8, 1, 1, 1, Math.max(meshResolution - 3, 0), TEXTURE_WIDTH, TEXTURE_HEIGHT);
-        OUTER_BODY = new BoxMesh(new Vector3f(0.0F, 0.0F, 0.0F), new Vector3f(1.0F, 1.0F, 1.0F), 0, 0, 8, 8, 8, meshResolution, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+        INNER_BODY = new BoxMesh(new Vector3f(0.125F, 0.125F, 0.125F), new Vector3f(0.875F, 0.875F, 0.875F), 0, 16, 6, 6, 6, JSConfig.meshResolution, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+        RIGHT_EYE = new BoxMesh(new Vector3f(0.09375F, 0.5F, 0.6875F), new Vector3f(0.34375F, 0.75F, 0.9375F), 32, 0, 2, 2, 2, Math.max(JSConfig.meshResolution - 2, 0), TEXTURE_WIDTH, TEXTURE_HEIGHT);
+        LEFT_EYE = new BoxMesh(new Vector3f(0.65625F, 0.5F, 0.6875F), new Vector3f(0.90625F, 0.75F, 0.9375F), 32, 4, 2, 2, 2, Math.max(JSConfig.meshResolution - 2, 0), TEXTURE_WIDTH, TEXTURE_HEIGHT);
+        MOUTH = new BoxMesh(new Vector3f(0.5F, 0.25F, 0.8125F), new Vector3f(0.625F, 0.375F, 0.9375F), 32, 8, 1, 1, 1, Math.max(JSConfig.meshResolution - 3, 0), TEXTURE_WIDTH, TEXTURE_HEIGHT);
+        OUTER_BODY = new BoxMesh(new Vector3f(0.0F, 0.0F, 0.0F), new Vector3f(1.0F, 1.0F, 1.0F), 0, 0, 8, 8, 8, JSConfig.meshResolution, TEXTURE_WIDTH, TEXTURE_HEIGHT);
     }
 
     public SlimeRenderer(EntityRendererManager renderManagerIn) {
@@ -97,8 +96,8 @@ public class SlimeRenderer extends LivingRenderer<SlimeEntity, SlimeModel<SlimeE
         this.shadowSize = 0.25F * entity.getSlimeSize();
 
         if(!MinecraftForge.EVENT_BUS.post(new RenderLivingEvent.Pre<>(entity, this, partialTicks, matrixStack, renderTypeBuffer, packedLightIn))) {
-            if(!JigglySlimes.EventHandler.JB_MAP.containsKey(entity)) JigglySlimes.EventHandler.JB_MAP.put(entity, new SlimeJigglyBits());
-            SlimeJigglyBits jigglyBits = JigglySlimes.EventHandler.JB_MAP.get(entity);
+            if(!EventHandler.JB_MAP.containsKey(entity)) EventHandler.JB_MAP.put(entity, new SlimeJigglyBits());
+            SlimeJigglyBits jigglyBits = EventHandler.JB_MAP.get(entity);
 
             for(int i = 0; i < 8; i++) {
                 MathUtil.lerp(jigglyBits.prevPos[i], jigglyBits.pos[i], partialTicks, lerpedJigglyBits[i]);
