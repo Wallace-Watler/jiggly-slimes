@@ -3,6 +3,7 @@ package jigglyslimes;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.monster.EntitySlime;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
@@ -10,11 +11,14 @@ import net.minecraft.util.text.TextFormatting;
 import org.lwjgl.util.vector.Vector3f;
 
 import java.util.List;
+import java.util.WeakHashMap;
 
 /**
  * Eight point-masses that interact with each other and the environment to simulate the physics of a slime.
  */
 public class SlimeJigglyBits {
+
+    public static final WeakHashMap<EntitySlime, SlimeJigglyBits> BY_ENTITY = new WeakHashMap<>();
 
     public static final float DENSITY = 1200.0F; // In kg/m^3
     public static final float RIGIDITY = 30.0F;

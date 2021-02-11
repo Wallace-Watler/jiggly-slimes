@@ -63,8 +63,10 @@ public class RenderSlime extends RenderLiving<EntitySlime> {
         shadowSize = 0.25F * entity.getSlimeSize();
 
         if(!MinecraftForge.EVENT_BUS.post(new RenderLivingEvent.Pre<>(entity, this, partialTicks, x, y, z))) {
-            if(!EventHandler.JB_MAP.containsKey(entity)) EventHandler.JB_MAP.put(entity, new SlimeJigglyBits());
-            SlimeJigglyBits jigglyBits = EventHandler.JB_MAP.get(entity);
+            if(!SlimeJigglyBits.BY_ENTITY.containsKey(entity)) {
+                SlimeJigglyBits.BY_ENTITY.put(entity, new SlimeJigglyBits());
+            }
+            SlimeJigglyBits jigglyBits = SlimeJigglyBits.BY_ENTITY.get(entity);
 
             for(int i = 0; i < 8; i++) {
                 MathUtil.lerp(jigglyBits.prevPos[i], jigglyBits.pos[i], partialTicks, lerpedJigglyBits[i]);
