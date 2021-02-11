@@ -56,11 +56,11 @@ public class SlimeRenderer extends LivingRenderer<SlimeEntity, SlimeModel<SlimeE
     }
 
     public static void createModelComponents() {
-        INNER_BODY = new BoxMesh(new Vector3f(0.125F, 0.125F, 0.125F), new Vector3f(0.875F, 0.875F, 0.875F), 0, 16, 6, 6, 6, JSConfig.meshResolution, TEXTURE_WIDTH, TEXTURE_HEIGHT);
-        RIGHT_EYE = new BoxMesh(new Vector3f(0.09375F, 0.5F, 0.6875F), new Vector3f(0.34375F, 0.75F, 0.9375F), 32, 0, 2, 2, 2, Math.max(JSConfig.meshResolution - 2, 0), TEXTURE_WIDTH, TEXTURE_HEIGHT);
-        LEFT_EYE = new BoxMesh(new Vector3f(0.65625F, 0.5F, 0.6875F), new Vector3f(0.90625F, 0.75F, 0.9375F), 32, 4, 2, 2, 2, Math.max(JSConfig.meshResolution - 2, 0), TEXTURE_WIDTH, TEXTURE_HEIGHT);
-        MOUTH = new BoxMesh(new Vector3f(0.5F, 0.25F, 0.8125F), new Vector3f(0.625F, 0.375F, 0.9375F), 32, 8, 1, 1, 1, Math.max(JSConfig.meshResolution - 3, 0), TEXTURE_WIDTH, TEXTURE_HEIGHT);
-        OUTER_BODY = new BoxMesh(new Vector3f(0.0F, 0.0F, 0.0F), new Vector3f(1.0F, 1.0F, 1.0F), 0, 0, 8, 8, 8, JSConfig.meshResolution, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+        INNER_BODY = new BoxMesh(new Vector3f(0.125F, 0.125F, 0.125F), new Vector3f(0.875F, 0.875F, 0.875F), 0, 16, 6, 6, 6, JSConfig.meshResolution.getValue(), TEXTURE_WIDTH, TEXTURE_HEIGHT);
+        RIGHT_EYE = new BoxMesh(new Vector3f(0.09375F, 0.5F, 0.6875F), new Vector3f(0.34375F, 0.75F, 0.9375F), 32, 0, 2, 2, 2, Math.max(JSConfig.meshResolution.getValue() - 2, 0), TEXTURE_WIDTH, TEXTURE_HEIGHT);
+        LEFT_EYE = new BoxMesh(new Vector3f(0.65625F, 0.5F, 0.6875F), new Vector3f(0.90625F, 0.75F, 0.9375F), 32, 4, 2, 2, 2, Math.max(JSConfig.meshResolution.getValue() - 2, 0), TEXTURE_WIDTH, TEXTURE_HEIGHT);
+        MOUTH = new BoxMesh(new Vector3f(0.5F, 0.25F, 0.8125F), new Vector3f(0.625F, 0.375F, 0.9375F), 32, 8, 1, 1, 1, Math.max(JSConfig.meshResolution.getValue() - 3, 0), TEXTURE_WIDTH, TEXTURE_HEIGHT);
+        OUTER_BODY = new BoxMesh(new Vector3f(0.0F, 0.0F, 0.0F), new Vector3f(1.0F, 1.0F, 1.0F), 0, 0, 8, 8, 8, JSConfig.meshResolution.getValue(), TEXTURE_WIDTH, TEXTURE_HEIGHT);
     }
 
     public SlimeRenderer(EntityRendererManager renderManagerIn) {
