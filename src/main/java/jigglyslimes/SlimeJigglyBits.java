@@ -20,11 +20,6 @@ public class SlimeJigglyBits {
 
     public static final WeakHashMap<EntitySlime, SlimeJigglyBits> BY_ENTITY = new WeakHashMap<>();
 
-    public static final float DENSITY = 1200.0F; // In kg/m^3
-    public static final float RIGIDITY = 30.0F;
-    public static final float INTERNAL_FRICTION = 0.055F;
-    public static final float COLLISION_FRICTION = 0.5F;
-
     // Coordinates are relative to the entity origin (non-rotated).
     public final Vector3f[] prevPos = new Vector3f[8];
     public final Vector3f[] pos = new Vector3f[8];
@@ -83,7 +78,7 @@ public class SlimeJigglyBits {
         ones. This allows the jiggly bits to continuously move around a bit while also keeping them from flying out of
         control whenever the entity moves suddenly.
          */
-        final float C = INTERNAL_FRICTION / (float) Math.pow(volume, 1.0 / 3);
+        final double C = JSConfig.slime.internalFriction / Math.pow(volume, 1.0 / 3);
         for(int i = 0; i < 8; i++) {
             vel[i].scale((float) Math.exp(-C * vel[i].length()));
         }
@@ -98,7 +93,7 @@ public class SlimeJigglyBits {
         float sinTheta = (float) Math.sin(Math.toRadians(entity.renderYawOffset));
         float halfWidth = entity.width / 2;
         // Ratio of surface area to volume represents metabolism; larger creatures tend to move slower.
-        final float accelMagnitude = RIGIDITY * (2 * w * w + 4 * w * h) / volume;
+        final double accelMagnitude = JSConfig.slime.rigidity * (2 * w * w + 4 * w * h) / volume;
         for(int i = 0; i < 8; i++) {
             float xx = (((i & 0x04) == 0x00) != renderUpsideDown) ? -halfWidth : halfWidth;
             float zz = (i & 0x01) == 0x00 ? -halfWidth : halfWidth;
@@ -106,7 +101,7 @@ public class SlimeJigglyBits {
             temp.x = xx * cosTheta - zz * sinTheta;
             temp.y = (((i & 0x02) == 0x00) != renderUpsideDown) ? 0.0F : entity.height;
             temp.z = zz * cosTheta + xx * sinTheta;
-            Vector3f.sub(temp, pos[i], temp).scale(accelMagnitude * 0.05F);
+            Vector3f.sub(temp, pos[i], temp).scale((float) (accelMagnitude * 0.05));
             Vector3f.add(vel[i], temp, vel[i]);
         }
 
@@ -116,16 +111,16 @@ public class SlimeJigglyBits {
             Vec3d position = new Vec3d(pos[i].x, pos[i].y, pos[i].z);
             Material materialAtPos = entity.world.getBlockState(new BlockPos(position)).getMaterial();
             if(materialAtPos.isSolid() || materialAtPos.isLiquid()) {
-                vel[i].scale(COLLISION_FRICTION);
+                vel[i].scale((float) JSConfig.slime.collisionFriction);
             } else {
-                float airDensityRatio = JigglySlimes.AIR_DENSITY / DENSITY;
+                double airDensityRatio = JigglySlimes.AIR_DENSITY / JSConfig.slime.density;
                 if(!entity.hasNoGravity()) vel[i].y += (1.0F - airDensityRatio) * JigglySlimes.GRAVITY * 0.05F;
             }
 
             List<Entity> collidedEntities = entity.world.getEntities(Entity.class, collided -> collided != null && collided != entity && collided.isEntityAlive() && collided.getRenderBoundingBox().contains(position));
             for(Entity collided : collidedEntities) {
                 translateToEntityCoords(collided);
-                vel[i].scale(COLLISION_FRICTION);
+                vel[i].scale((float) JSConfig.slime.collisionFriction);
                 translateToWorldCoords(collided);
             }
         }
@@ -142,8 +137,8 @@ public class SlimeJigglyBits {
     private void calculateInteraction(int jbIndex1, int jbIndex2, float preferredDist) {
         Vector3f.sub(pos[jbIndex2], pos[jbIndex1], temp);
         float dist = temp.length();
-        float accelMagnitude = dist == 0.0F ? 0.0F : (dist - preferredDist) * RIGIDITY / dist;
-        temp.scale(accelMagnitude * 0.05F);
+        double accelMagnitude = dist == 0.0F ? 0.0 : JSConfig.slime.rigidity * (dist * dist - preferredDist * preferredDist) / (2 * dist * preferredDist);
+        temp.scale((float) (accelMagnitude * 0.05));
         Vector3f.add(vel[jbIndex1], temp, vel[jbIndex1]);
         Vector3f.sub(vel[jbIndex2], temp, vel[jbIndex2]);
     }

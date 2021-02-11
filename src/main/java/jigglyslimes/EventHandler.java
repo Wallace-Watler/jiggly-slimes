@@ -36,6 +36,7 @@ public class EventHandler {
         if(event.getModID().equals(JigglySlimes.MODID)) {
             ConfigManager.sync(JigglySlimes.MODID, Config.Type.INSTANCE);
             RenderSlime.createModelComponents();
+            SlimeJigglyBits.BY_ENTITY.replaceAll((entity, jigglyBits) -> new SlimeJigglyBits());
         }
     }
 }
