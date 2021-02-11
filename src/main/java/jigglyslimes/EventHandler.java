@@ -8,19 +8,18 @@ import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
-import java.util.WeakHashMap;
-
 @Mod.EventBusSubscriber(value = Dist.CLIENT)
 public class EventHandler {
-    public static final WeakHashMap<SlimeEntity, SlimeJigglyBits> JB_MAP = new WeakHashMap<>();
 
     @SubscribeEvent
     public static void onLivingUpdate(LivingEvent.LivingUpdateEvent event) {
         LivingEntity entity = event.getEntityLiving();
         if(entity.getClass() == SlimeEntity.class && entity.world.isRemote) {
             SlimeEntity entitySlime = (SlimeEntity) entity;
-            if(!JB_MAP.containsKey(entitySlime)) JB_MAP.put(entitySlime, new SlimeJigglyBits());
-            JB_MAP.get(entitySlime).update(entitySlime);
+            if(!SlimeJigglyBits.BY_ENTITY.containsKey(entitySlime)) {
+                SlimeJigglyBits.BY_ENTITY.put(entitySlime, new SlimeJigglyBits(entitySlime.getPositionVec()));
+            }
+            SlimeJigglyBits.BY_ENTITY.get(entitySlime).update(entitySlime);
         }
     }
 

@@ -4,6 +4,7 @@ import jigglyslimes.math.MathUtil;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.monster.SlimeEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3d;
@@ -11,11 +12,14 @@ import net.minecraft.util.math.vector.Vector3f;
 import net.minecraft.util.text.TextFormatting;
 
 import java.util.List;
+import java.util.WeakHashMap;
 
 /**
  * Eight point-masses that interact with each other and the environment to simulate the physics of a slime.
  */
 public class SlimeJigglyBits {
+
+    public static final WeakHashMap<SlimeEntity, SlimeJigglyBits> BY_ENTITY = new WeakHashMap<>();
 
     public static final float DENSITY = 1200.0F; // In kg/m^3
     public static final float RIGIDITY = 30.0F;
@@ -27,10 +31,15 @@ public class SlimeJigglyBits {
     public final Vector3f[] pos = new Vector3f[8];
     public final Vector3f[] vel = new Vector3f[8];
 
-    // Temporary vectors
+    // The entity's prevPos and lastTickPos variables are set to the current position just before entering
+    // update(LivingEntity), so this stores the entity's previous position.
+    public final Vector3f entityPrevPos;
+
+    // Temporary vector
     private static final Vector3f temp = new Vector3f();
 
-    public SlimeJigglyBits() {
+    public SlimeJigglyBits(Vector3d entityPos) {
+        entityPrevPos = new Vector3f(entityPos);
         for(int i = 0; i < 8; i++) {
             prevPos[i] = new Vector3f();
             pos[i] = new Vector3f();
@@ -136,6 +145,8 @@ public class SlimeJigglyBits {
             temp.mul(0.05F);
             pos[i].add(temp);
         }
+
+        MathUtil.set(entityPrevPos, entity.getPositionVec());
     }
 
     private void calculateInteraction(int jbIndex1, int jbIndex2, float preferredDist) {
@@ -149,15 +160,15 @@ public class SlimeJigglyBits {
 
     private void translateToWorldCoords(Entity entity) {
         for(int i = 0; i < 8; i++) {
-            MathUtil.add(pos[i], entity.getPosX(), entity.getPosY(), entity.getPosZ());
-            MathUtil.add(vel[i], (entity.getPosX() - entity.prevPosX) / 0.05, (entity.getPosY() - entity.prevPosY) / 0.05, (entity.getPosZ() - entity.prevPosZ) / 0.05);
+            MathUtil.add(pos[i], entity.getPositionVec());
+            MathUtil.add(vel[i], (entity.getPosX() - entityPrevPos.getX()) / 0.05, (entity.getPosY() - entityPrevPos.getY()) / 0.05, (entity.getPosZ() - entityPrevPos.getZ()) / 0.05);
         }
     }
 
     private void translateToEntityCoords(Entity entity) {
         for(int i = 0; i < 8; i++) {
-            MathUtil.sub(pos[i], entity.getPosX(), entity.getPosY(), entity.getPosZ());
-            MathUtil.sub(vel[i], (entity.getPosX() - entity.prevPosX) / 0.05, (entity.getPosY() - entity.prevPosY) / 0.05, (entity.getPosZ() - entity.prevPosZ) / 0.05);
+            MathUtil.sub(pos[i], entity.getPositionVec());
+            MathUtil.sub(vel[i], (entity.getPosX() - entityPrevPos.getX()) / 0.05, (entity.getPosY() - entityPrevPos.getY()) / 0.05, (entity.getPosZ() - entityPrevPos.getZ()) / 0.05);
         }
     }
 }

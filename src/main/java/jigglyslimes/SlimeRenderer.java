@@ -96,22 +96,18 @@ public class SlimeRenderer extends LivingRenderer<SlimeEntity, SlimeModel<SlimeE
         this.shadowSize = 0.25F * entity.getSlimeSize();
 
         if(!MinecraftForge.EVENT_BUS.post(new RenderLivingEvent.Pre<>(entity, this, partialTicks, matrixStack, renderTypeBuffer, packedLightIn))) {
-            if(!EventHandler.JB_MAP.containsKey(entity)) EventHandler.JB_MAP.put(entity, new SlimeJigglyBits());
-            SlimeJigglyBits jigglyBits = EventHandler.JB_MAP.get(entity);
+            if(!SlimeJigglyBits.BY_ENTITY.containsKey(entity)) {
+                SlimeJigglyBits.BY_ENTITY.put(entity, new SlimeJigglyBits(entity.getPositionVec()));
+            }
+            SlimeJigglyBits jigglyBits = SlimeJigglyBits.BY_ENTITY.get(entity);
 
             for(int i = 0; i < 8; i++) {
                 MathUtil.lerp(jigglyBits.prevPos[i], jigglyBits.pos[i], partialTicks, lerpedJigglyBits[i]);
             }
 
             final Minecraft minecraft = Minecraft.getInstance();
-            final int resReduction;
-            if(minecraft.player == null) {
-                resReduction = 0;
-            } else {
-                Vector3d entityPos = entity.getPositionVec().subtract(minecraft.player.getPositionVec());
-                // resReduction = max(log2(distance) - 4, 0)
-                resReduction = Math.max((MathHelper.log2((int) entityPos.lengthSquared()) >> 1) - 4, 0);
-            }
+            // resReduction = max(log2(distance) - 4, 0)
+            final int resReduction = minecraft.player == null ? 0 : Math.max((MathHelper.log2((int) entity.getDistanceSq(minecraft.player)) >> 1) - 4, 0);
             final boolean entityIsVisible = this.isVisible(entity);
             final int packedOverlay = getPackedOverlay(entity, this.getOverlayProgress(entity, partialTicks));
 
