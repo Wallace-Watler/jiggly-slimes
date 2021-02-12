@@ -1,4 +1,4 @@
-#Jiggly Slimes
+# Jiggly Slimes
 It's quite self-explanatory: a Minecraft mod that makes slimes jiggly! Why? Because why not?!
 
 ![](jiggly-slime.gif)
