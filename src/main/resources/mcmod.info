@@ -5,7 +5,8 @@
   "description": "A client-side mod that gives slimes a jiggly appearance.",
   "version": "${version}",
   "mcversion": "${mcversion}",
-  "updateJSON": "",
+  "url": "https://github.com/Wallace-Watler/jiggly-slimes",
+  "updateJSON": "https://raw.githubusercontent.com/Wallace-Watler/jiggly-slimes/updateJSON/updates.json",
   "authorList": ["WallaceTheWizard"],
   "logoFile": ""
 }

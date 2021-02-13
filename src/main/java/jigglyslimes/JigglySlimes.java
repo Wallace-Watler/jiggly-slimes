@@ -9,7 +9,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-@Mod(modid = JigglySlimes.MODID, useMetadata = true, clientSideOnly = true)
+@Mod(modid = JigglySlimes.MODID, useMetadata = true, clientSideOnly = true, updateJSON = "https://raw.githubusercontent.com/Wallace-Watler/jiggly-slimes/updateJSON/updates.json")
 public class JigglySlimes {
 
     public static final String MODID = "jigglyslimes";
