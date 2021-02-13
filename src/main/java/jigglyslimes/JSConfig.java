@@ -13,7 +13,7 @@ import java.util.TreeSet;
 
 public final class JSConfig {
 
-    public static Config.Range.Int meshResolution = new Config.Range.Int("meshResolution", 3).setMin(0).setMax(9).setComment("Higher numbers produce smoother-looking slimes.");
+    public static Config.Range.Int meshResolution = new Config.Range.Int("meshResolution", 4).setMin(0).setMax(9).setComment("Higher numbers produce smoother-looking slimes.");
 
     public static final Slime slime = new Slime();
     private static class Slime {

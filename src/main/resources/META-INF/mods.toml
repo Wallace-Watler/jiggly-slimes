@@ -1,14 +1,14 @@
 modLoader="javafml" #mandatory
 loaderVersion="[35,)" #mandatory
 license="MIT" #mandatory
-#issueTrackerURL="" #optional
+issueTrackerURL="https://github.com/Wallace-Watler/jiggly-slimes/issues" #optional
 
 [[mods]] #mandatory
 modId="jigglyslimes" #mandatory
 version="${file.jarVersion}" #mandatory
 displayName="Jiggly Slimes" #mandatory
-#updateJSONURL="" #optional
-#displayURL="" #optional
+updateJSONURL="https://raw.githubusercontent.com/Wallace-Watler/jiggly-slimes/updateJSON/updates.json" #optional
+displayURL="https://github.com/Wallace-Watler/jiggly-slimes" #optional
 #logoFile="" #optional
 #credits="" #optional
 authors="WallaceTheWizard" #optional
