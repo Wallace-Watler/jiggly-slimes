@@ -12,6 +12,7 @@ public class JSConfig {
     @Config.Comment("Physics properties of slimes. Change with caution; setting these values very low or very high can produce weird effects.")
     public static final Slime slime = new Slime();
     public static class Slime {
+        @Config.Comment("Lower = more friction")
         @Config.RangeDouble(min = 0.0, max = 1.0)
         public double collisionFriction = 0.5;
 
@@ -19,6 +20,7 @@ public class JSConfig {
         @Config.RangeDouble(min = 0.001)
         public double density = 1200.0;
 
+        @Config.Comment("Higher = more friction")
         @Config.RangeDouble(min = 0.0)
         public double internalFriction = 0.055;
 

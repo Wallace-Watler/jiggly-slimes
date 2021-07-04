@@ -114,7 +114,7 @@ public class SlimeJigglyBits {
                 vel[i].scale((float) JSConfig.slime.collisionFriction);
             } else {
                 double airDensityRatio = JigglySlimes.AIR_DENSITY / JSConfig.slime.density;
-                if(!entity.hasNoGravity()) vel[i].y += (1.0F - airDensityRatio) * JigglySlimes.GRAVITY * 0.05F;
+                if(!entity.hasNoGravity()) vel[i].y += (1.0 - airDensityRatio) * JigglySlimes.GRAVITY * 0.05F;
             }
 
             List<Entity> collidedEntities = entity.world.getEntities(Entity.class, collided -> collided != null && collided != entity && collided.isEntityAlive() && collided.getRenderBoundingBox().contains(position));
