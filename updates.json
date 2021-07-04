@@ -1,6 +1,10 @@
 {
   "homepage": "https://github.com/Wallace-Watler/jiggly-slimes",
   "promos": {},
-  "1.12.2": {},
-  "1.16.4": {}
+  "1.12.2": {
+    "1.12.2-0.1.0": "Initial release"
+  },
+  "1.16.4": {
+    "1.16.4-0.1.0": "Initial release"
+  }
 }
