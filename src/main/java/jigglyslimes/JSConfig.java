@@ -17,9 +17,9 @@ public final class JSConfig {
 
     public static final Slime slime = new Slime();
     private static class Slime {
-        public Config.Range.Double collisionFriction = new Config.Range.Double("slime.collisionFriction", 0.5).setMin(0.0).setMax(1.0);
-        public Config.Range.Double density = new Config.Range.Double("slime.density", 1200.0).setMin(0.0);
-        public Config.Range.Double internalFriction = new Config.Range.Double("slime.internalFriction", 0.055).setMin(0.0);
+        public Config.Range.Double collisionFriction = new Config.Range.Double("slime.collisionFriction", 0.5).setMin(0.0).setMax(1.0).setComment("Lower = more friction");
+        public Config.Range.Double density = new Config.Range.Double("slime.density", 1200.0).setMin(0.001).setComment("In kg/m^3. The density of water is 1000.");
+        public Config.Range.Double internalFriction = new Config.Range.Double("slime.internalFriction", 0.055).setMin(0.0).setComment("Higher = more friction");
         public Config.Range.Double rigidity = new Config.Range.Double("slime.rigidity", 30.0).setMin(0.0);
     }
 
@@ -72,9 +72,9 @@ public final class JSConfig {
                 configOption.write(wr);
                 wr.println();
             }
-            LOGGER.info("Created new config file at " + CONFIG_FILE.getAbsolutePath());
+            LOGGER.info("Wrote to config file at " + CONFIG_FILE.getAbsolutePath());
         } catch(FileNotFoundException e) {
-            LOGGER.warn("Could not create a new config file at " + CONFIG_FILE.getAbsolutePath());
+            LOGGER.warn("Could not write to config file at " + CONFIG_FILE.getAbsolutePath());
         }
     }
 }

@@ -109,11 +109,11 @@ public class SlimeRenderer extends LivingRenderer<SlimeEntity, SlimeModel<SlimeE
             // resReduction = max(log2(distance) - 4, 0)
             final int resReduction = minecraft.player == null ? 0 : Math.max((MathHelper.log2((int) entity.getDistanceSq(minecraft.player)) >> 1) - 4, 0);
             final boolean entityIsVisible = this.isVisible(entity);
-            final int packedOverlay = getPackedOverlay(entity, this.getOverlayProgress(entity, partialTicks));
+            final int packedOverlay = getPackedOverlay(entity, 0.0F);
 
             RenderType renderType;
             if(!entityIsVisible && !entity.isInvisibleToPlayer(minecraft.player)) {
-                // TODO
+                // TODO - Why is this here?
                 renderType = RenderType.getItemEntityTranslucentCull(getEntityTexture(entity));
                 IVertexBuilder vertexBuilder = renderTypeBuffer.getBuffer(renderType);
                 renderOpaqueModelComponents(matrixStack.getLast(), vertexBuilder, packedLightIn, packedOverlay, 0.15F, resReduction);
@@ -126,7 +126,7 @@ public class SlimeRenderer extends LivingRenderer<SlimeEntity, SlimeModel<SlimeE
                 WorldVertexBufferUploader.draw(BUFFER);
                 renderType.clearRenderState();
             } else if(minecraft.isEntityGlowing(entity)) {
-                // TODO
+                // TODO - Why is this here?
                 renderType = RenderType.getOutline(getEntityTexture(entity));
                 IVertexBuilder vertexBuilder = renderTypeBuffer.getBuffer(renderType);
                 renderOpaqueModelComponents(matrixStack.getLast(), vertexBuilder, packedLightIn, packedOverlay, 1.0F, resReduction);
@@ -134,7 +134,7 @@ public class SlimeRenderer extends LivingRenderer<SlimeEntity, SlimeModel<SlimeE
             if(!entity.isInvisible()) {
                 renderType = JSRenderType.getEntityTranslucentTris(getEntityTexture(entity));
                 BUFFER.begin(GL11.GL_TRIANGLES, DefaultVertexFormats.ENTITY);
-                renderTranslucentModelComponents(matrixStack.getLast(), BUFFER, packedLightIn, LivingRenderer.getPackedOverlay(entity, 0.0F), resReduction);
+                renderTranslucentModelComponents(matrixStack.getLast(), BUFFER, packedLightIn, packedOverlay, resReduction);
                 BUFFER.finishDrawing();
                 renderType.setupRenderState();
                 WorldVertexBufferUploader.draw(BUFFER);
